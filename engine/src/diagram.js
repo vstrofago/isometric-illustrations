@@ -49,9 +49,13 @@ export function buildDiagram(o, make) {
     const line = new Line({ id: e.id, points: ptsR, arrow: e.arrow ?? 'end', line: e.line || 'ln', dash: e.dash, flow: e.flow === false ? undefined : e.flow ?? o.flow ?? 14, arrowSize: 4.5 });
     g.add(line);
     const path = new Path(ptsR);
+    /* things that belong to the edge: drawOn() fades them in once the line is drawn */
+    line.attached = [];
     if (e.label) {
       const mid = path.at(0.5);
-      g.add(new Text({ text: e.label, at: mid, size: e.labelSize || 5.5, anchor: 'middle', dy: -5, cls: 'tx tx-label', layer: 1 }));
+      const label = new Text({ text: e.label, at: mid, size: e.labelSize || 5.5, anchor: 'middle', dy: -5, cls: 'tx tx-label', layer: 1 });
+      g.add(label);
+      line.attached.push(label);
     }
     edges.push({ spec: e, line, path, from: A, to: B });
   }
@@ -68,6 +72,7 @@ export function buildDiagram(o, make) {
         const card = make(ed.spec.packet || 'card', { at: [p0[0], p0[1], p0[2]], w: 7, d: 5, t: 1.2, id: (ed.spec.id || ed.spec.from + '-' + ed.spec.to) + '-packet-' + i });
         g.add(card);
         cards.push(card);
+        ed.line.attached.push(card);
       }
       scene.travel(cards, ed.path, { duration: ed.spec.duration ?? ed.path.length / (ed.spec.speed ?? o.speed ?? 40), spread: 1 / k, lift: 0.4, offset: ed.spec.offset || 0 });
     }

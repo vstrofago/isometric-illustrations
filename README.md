@@ -14,8 +14,8 @@ agent that reads `SKILL.md`) to plan, build, check and ship these figures.
 
 | | |
 |---|---|
-| ![Desk computer powering on](docs/img/desk-computer.gif) | ![Service architecture diagram with packets in flight](docs/img/architecture.gif) |
-| **Desk computer**: click to power on (a CRT line opens into the picture), then type. | **Service architecture**: a diagram from data, with routed edges and packets in flight. |
+| ![Desk computer powering on](docs/img/desk-computer.gif) | ![Service architecture diagram: clients, API, database, queue and worker, with packets in flight](docs/img/architecture.gif) |
+| **Desk computer**: click to power on (a CRT line opens into the picture), then type. | **Service architecture**: a diagram from data: edges draw on, then packets flow. |
 
 ## Why
 

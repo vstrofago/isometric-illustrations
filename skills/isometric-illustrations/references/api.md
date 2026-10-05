@@ -156,7 +156,8 @@ Materials (`material: '…'`): `lit` (bright, pair with `glow: true`), `screen` 
 Fill classes for face drawers and flats: `f-top f-left f-right f-bevel f-dark f-screen f-screen-on f-key
 f-lit f-glass f-ink f-road f-bg f-accent f-soft`. Line classes: `ln` (edges), `ln-soft` (detail),
 `ln-faint` (texture), `ln-strong`, `ln-bold`, `ln-lit`, `ln-accent`. Text classes: `tx`, `tx-label`
-(mono uppercase, tracked), `tx-lit`, `tx-strong`, `tx-on-lit`.
+(mono uppercase, tracked), `tx-lit`, `tx-strong`, `tx-on-lit`, `tx-floor` (a caption lying on the floor;
+`render.mjs --bare` hides it).
 
 Colour always comes from CSS custom properties, so themes and materials switch without re-drawing.
 Override per scene with `colors`, per node with `style: { '--iso-accent': '#e05a2b' }`.
@@ -215,6 +216,8 @@ node scripts/render.mjs page.html --video a.mp4 --duration 6 --fps 30   # needs 
 node scripts/render.mjs page.html --svg a.svg
   --actions '[{"t":0.5,"click":"node-id"},{"t":1,"hover":"node-id"},{"t":2,"type":"text"},{"t":3,"key":"Enter"}]'
   --selector <css> --width 1200 --scale 2 --theme light --start 0 --quiet
+  --bare            # hide the figure captions and floor labels (clean clips for a video or a post)
+  --hide <css>      # hide anything else
 ```
 
 It prints `scenes: [{nodes, settle, timelines, loops, viewBox}]` and any page errors (exit code 5).

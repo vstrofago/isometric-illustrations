@@ -534,21 +534,46 @@ export class Line extends Node {
   lbox() { const b = box3.empty(); for (const p of this.pts()) box3.addPt(b, p[0], p[1], p[2]); return box3.valid(b) ? b : null; }
   aabb(frame) { const b = box3.empty(); for (const p of this.pts()) { const w = applyFrame(frame, p[0], p[1], p[2]); box3.addPt(b, w[0], w[1], w[2]); } return box3.valid(b) ? b : null; }
   draw(d) {
-    const o = this.opts, pts = this.pts().map((p) => d.w(p[0], p[1], p[2]));
+    const o = this.opts;
+    let pts = this.pts();
     if (pts.length < 2) return;
     const cls = o.line || o.cls || 'ln';
+    /* drawing on: cut the polyline at the revealed length (dash tricks don't survive non-scaling strokes
+       or the flow dash); the line's own dash and flow wait until it is complete */
+    const revealing = o.reveal !== undefined && o.reveal < 1;
+    if (revealing) {
+      pts = cutPolyline(pts, Math.max(0, o.reveal));
+      if (pts.length < 2) return;
+    }
+    pts = pts.map((p) => d.w(p[0], p[1], p[2]));
     let extra = '';
-    if (o.dash) extra += ' stroke-dasharray="' + dashArray(o.dash) + '"';
-    if (o.flow) extra += ' data-flow="' + num(o.flow) + '"';
+    if (o.dash && !revealing) extra += ' stroke-dasharray="' + dashArray(o.dash) + '"';
+    if (o.flow && !revealing) extra += ' data-flow="' + num(o.flow) + '"';
     if (o.width) extra += ' stroke-width="' + num(o.width) + '"';
-    if (o.reveal !== undefined && o.reveal < 1) extra += ' pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="' + fmt(1 - Math.max(0, o.reveal)) + '"';
-    d.line(d.dw(pts, o.closed), cls, extra || undefined);
-    if (o.reveal !== undefined && o.reveal < 1) return;
+    d.line(d.dw(pts, o.closed && !revealing), cls, extra || undefined);
+    if (revealing) return;
     const as = o.arrowSize || 5;
     if (o.arrow === 'end' || o.arrow === 'both' || o.arrow === true) arrowHead(d, pts[pts.length - 2], pts[pts.length - 1], as, o.arrowClass || 'f-ink');
     if (o.arrow === 'start' || o.arrow === 'both') arrowHead(d, pts[1], pts[0], as, o.arrowClass || 'f-ink');
     if (o.dots) for (const p of [pts[0], pts[pts.length - 1]]) d.both(d.hcircle(p[0], p[1], p[2], o.dots), 'f-ink', null);
   }
+}
+
+/* The first fraction `f` (0..1) of a polyline, by length. */
+function cutPolyline(pts, f) {
+  const seg = [];
+  let total = 0;
+  for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1], pts[i][2] - pts[i - 1][2]); seg.push(l); total += l; }
+  let left = total * f;
+  if (left <= EPS) return [];
+  const out = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    if (left >= seg[i - 1]) { out.push(pts[i]); left -= seg[i - 1]; continue; }
+    const k = left / (seg[i - 1] || 1), a = pts[i - 1], b = pts[i];
+    out.push([a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]);
+    break;
+  }
+  return out;
 }
 
 /* Orthogonal route on a horizontal plane with rounded corners. */

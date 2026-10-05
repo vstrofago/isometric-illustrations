@@ -74,7 +74,13 @@ Object.assign(Scene.prototype, {
   drawOn(target, o = {}) {
     const nodes = this.resolve(target);
     const tl = this.timeline({ delay: o.delay ?? 0 });
-    tl.fromTo(nodes, { reveal: 0 }, { reveal: 1 }, { duration: o.duration ?? 1, ease: o.ease ?? 'inOutCubic', stagger: o.stagger ?? 0.1 }, 0);
+    const dur = o.duration ?? 1, stagger = o.stagger ?? 0.1;
+    tl.fromTo(nodes, { reveal: 0 }, { reveal: 1 }, { duration: dur, ease: o.ease ?? 'inOutCubic', stagger }, 0);
+    /* a diagram edge's packets and label appear as its line arrives, not before */
+    const each = typeof stagger === 'number' ? stagger : stagger.each ?? 0;
+    nodes.forEach((n, i) => {
+      if (n.attached && n.attached.length) tl.fromTo(n.attached, { opacity: 0 }, { opacity: 1 }, { duration: 0.3 }, i * each + dur * 0.8);
+    });
     return tl;
   },
   /* reveal a Text node character by character */

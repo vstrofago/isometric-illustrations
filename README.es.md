@@ -12,7 +12,7 @@ figuras.
 | | |
 |---|---|
 | ![Ordenador de escritorio encendiéndose](docs/img/desk-computer.gif) | ![Diagrama de arquitectura con paquetes en tránsito](docs/img/architecture.gif) |
-| **Ordenador**: clic para encender (una línea CRT se abre en la imagen) y escribe. | **Arquitectura**: un diagrama a partir de datos, con aristas enrutadas y paquetes en tránsito. |
+| **Ordenador**: clic para encender (una línea CRT se abre en la imagen) y escribe. | **Arquitectura**: un diagrama a partir de datos: las aristas se dibujan y luego fluyen los paquetes. |
 
 ## Empezar
 

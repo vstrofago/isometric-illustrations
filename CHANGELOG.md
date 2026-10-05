@@ -32,6 +32,8 @@ First public release.
 
 ### Examples and tools
 - Desk computer, packing line, service architecture, server room, hello; gallery and playground.
+- `render.mjs`: deterministic PNG, contact sheet, GIF, MP4, WebM and SVG exports, scripted interactions,
+  `--bare` for clips without captions.
 - Unit and visual tests, CI, release workflow.
 
 [Unreleased]: https://github.com/vstrofago/isometric-illustrations/compare/v0.1.0...HEAD
