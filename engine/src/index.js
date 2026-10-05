@@ -136,6 +136,8 @@ Group.prototype.group = function (opts = {}, fn) {
 function scene(host, opts = {}) {
   if (opts.figure && host) {
     const f = figure(host, { theme: opts.theme, ...opts.figure });
+    if (opts.colors && opts.colors.bg) f.el.style.setProperty('--iso-fig-bg', 'color-mix(in oklab, ' + opts.colors.bg + ' 92%, ' + (opts.colors.fg || '#fff') + ')');
+    if (opts.colors && opts.colors.fg) { f.el.style.setProperty('--iso-fig-cap', 'color-mix(in oklab, ' + opts.colors.fg + ' 45%, transparent)'); f.el.style.setProperty('--iso-fig-cap-strong', 'color-mix(in oklab, ' + opts.colors.fg + ' 70%, transparent)'); }
     const s = new Scene(f.stage, opts);
     s.figure = f;
     s.status = (t) => { f.status(t); return s; };

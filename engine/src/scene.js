@@ -103,7 +103,10 @@ export class Scene {
     if (!this.vb || this.opts.refit) this.vb = this._viewBox();
     const o = this.opts, vb = this.vb;
     const label = o.label || o.title || 'Isometric illustration';
-    const svgOpen = '<svg xmlns="http://www.w3.org/2000/svg" class="iso iso-' + o.theme + (o.class ? ' ' + o.class : '') + '" viewBox="' + vb.map(fmt).join(' ') + '" role="img" aria-label="' + escAttr(label) + '"' + (o.height ? ' style="height:' + o.height + (typeof o.height === 'number' ? 'px' : '') + ';width:100%"' : '') + ' preserveAspectRatio="xMidYMid meet">';
+    const css = [];
+    if (o.height) css.push('height:' + o.height + (typeof o.height === 'number' ? 'px' : ''), 'width:100%');
+    if (o.colors) for (const k in o.colors) css.push('--iso-' + k + ':' + o.colors[k]);
+    const svgOpen = '<svg xmlns="http://www.w3.org/2000/svg" class="iso iso-' + o.theme + (o.class ? ' ' + o.class : '') + '" viewBox="' + vb.map(fmt).join(' ') + '" role="img" aria-label="' + escAttr(label) + '"' + (css.length ? ' style="' + escAttr(css.join(';')) + '"' : '') + ' preserveAspectRatio="xMidYMid meet">';
     const markup = svgOpen + (o.title ? '<title>' + escAttr(o.title) + '</title>' : '') + '<g class="iso-root">' + html + '</g></svg>';
     if (!this.host || typeof document === 'undefined') { this._markup = markup; return markup; }
     if (this.svg && this.svg.parentNode === this.host) {

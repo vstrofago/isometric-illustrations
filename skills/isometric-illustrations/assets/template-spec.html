@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{TITLE}}</title>
+<style>
+  html,body{margin:0;background:#0b0c0d}
+  main{max-width:960px;margin:0 auto;padding:24px 16px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script src="iso.js"></script>
+<script type="application/json" id="spec">
+{
+  "theme": "dark",
+  "figure": { "index": "Fig. 1", "title": "{{TITLE}}", "hint": "Hover a block", "status": "ready" },
+  "label": "Isometric illustration of …",
+  "objects": [
+    { "type": "platform", "size": [300, 180] },
+    { "type": "diagram", "grid": 130, "origin": [-65, 0],
+      "nodes": [
+        { "id": "a", "cell": [0, 0], "icon": "user", "label": "Client" },
+        { "id": "b", "cell": [1, 0], "icon": "server", "label": "API", "material": "lit", "glow": true }
+      ],
+      "edges": [ { "from": "a", "to": "b", "packets": 1, "label": "https" } ]
+    }
+  ],
+  "animations": [
+    { "type": "assemble", "stagger": 0.1 }
+  ],
+  "interactions": [
+    { "target": ["a", "b"], "hover": "lift", "z": 5 }
+  ]
+}
+</script>
+<script>Iso.render(JSON.parse(document.getElementById('spec').textContent), '#app');</script>
+</body>
+</html>

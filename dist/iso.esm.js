@@ -2282,7 +2282,10 @@ var Scene = class {
     if (!this.vb || this.opts.refit) this.vb = this._viewBox();
     const o = this.opts, vb = this.vb;
     const label = o.label || o.title || "Isometric illustration";
-    const svgOpen = '<svg xmlns="http://www.w3.org/2000/svg" class="iso iso-' + o.theme + (o.class ? " " + o.class : "") + '" viewBox="' + vb.map(fmt).join(" ") + '" role="img" aria-label="' + escAttr(label) + '"' + (o.height ? ' style="height:' + o.height + (typeof o.height === "number" ? "px" : "") + ';width:100%"' : "") + ' preserveAspectRatio="xMidYMid meet">';
+    const css2 = [];
+    if (o.height) css2.push("height:" + o.height + (typeof o.height === "number" ? "px" : ""), "width:100%");
+    if (o.colors) for (const k in o.colors) css2.push("--iso-" + k + ":" + o.colors[k]);
+    const svgOpen = '<svg xmlns="http://www.w3.org/2000/svg" class="iso iso-' + o.theme + (o.class ? " " + o.class : "") + '" viewBox="' + vb.map(fmt).join(" ") + '" role="img" aria-label="' + escAttr(label) + '"' + (css2.length ? ' style="' + escAttr(css2.join(";")) + '"' : "") + ' preserveAspectRatio="xMidYMid meet">';
     const markup = svgOpen + (o.title ? "<title>" + escAttr(o.title) + "</title>" : "") + '<g class="iso-root">' + html + "</g></svg>";
     if (!this.host || typeof document === "undefined") {
       this._markup = markup;
@@ -4055,6 +4058,11 @@ Group.prototype.group = function(opts = {}, fn) {
 function scene(host, opts = {}) {
   if (opts.figure && host) {
     const f = figure(host, { theme: opts.theme, ...opts.figure });
+    if (opts.colors && opts.colors.bg) f.el.style.setProperty("--iso-fig-bg", "color-mix(in oklab, " + opts.colors.bg + " 92%, " + (opts.colors.fg || "#fff") + ")");
+    if (opts.colors && opts.colors.fg) {
+      f.el.style.setProperty("--iso-fig-cap", "color-mix(in oklab, " + opts.colors.fg + " 45%, transparent)");
+      f.el.style.setProperty("--iso-fig-cap-strong", "color-mix(in oklab, " + opts.colors.fg + " 70%, transparent)");
+    }
     const s2 = new Scene(f.stage, opts);
     s2.figure = f;
     s2.status = (t) => {

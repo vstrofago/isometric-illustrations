@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{TITLE}}</title>
+<style>
+  html,body{margin:0;background:#0b0c0d}
+  main{max-width:960px;margin:0 auto;padding:24px 16px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script src="iso.js"></script>
+<script>
+/* {{TITLE}} — world units: x → right-down, y → left-down, z → up. The platform top is z = 0. */
+const s = Iso.scene('#app', {
+  figure: { index: 'Fig. 1', title: '{{TITLE}}', hint: 'Describe the interaction', status: 'ready' },
+  label: 'Isometric illustration of …',   // what a screen reader should hear
+  theme: 'dark',                         // dark · light · paper · blueprint · terminal
+});
+
+/* 1. ground */
+s.platform({ size: [240, 180] });
+
+/* 2. objects (prefabs first; primitives for custom shapes) */
+s.laptop({ at: [-30, -10, 0] });
+s.server({ id: 'rack', at: [60, -40, 0] });
+
+/* 3. one lit moment */
+s.card({ id: 'card', at: [40, 40, 0] });
+
+/* 4. motion: an entrance + at most two ambient loops */
+s.assemble();
+s.float('card', { amp: 4, period: 2.6 });
+s.blink('.led', { period: 1.2, stagger: 0.3 });
+</script>
+</body>
+</html>
