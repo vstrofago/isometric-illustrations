@@ -1662,6 +1662,13 @@
       if (!pl) {
         const w = d.w(x, y, z), p = d.P(w[0], w[1], w[2]);
         const dx = o.dx || 0, dy = o.dy || 0;
+        const tw = Math.max(...lines.map((l) => l.length)) * size * (cls.includes("tx-label") ? 0.72 : 0.62);
+        const x0 = p[0] + dx - (anchor === "middle" ? tw / 2 : anchor === "end" ? tw : 0), y1 = p[1] + dy;
+        const b = d.b;
+        b[0] = Math.min(b[0], x0);
+        b[2] = Math.max(b[2], x0 + tw);
+        b[1] = Math.min(b[1], y1 - size);
+        b[3] = Math.max(b[3], y1 + lh * (lines.length - 1) + size * 0.3);
         d.raw('<text class="' + cls + '" transform="translate(' + fmt(p[0] + dx) + " " + fmt(p[1] + dy) + ')" font-size="' + fmt(size) + '" text-anchor="' + anchor + '"' + ls + wt + ">" + tsp + "</text>");
         return;
       }
@@ -2271,7 +2278,6 @@
     }
     /* ── DOM ── */
     render() {
-      if (!this.host && typeof document === "undefined") return this.toString();
       const v = this.view, html = this.root.content(v, IDENTITY);
       this.measured = true;
       if (!this.vb || this.opts.refit) this.vb = this._viewBox();
@@ -2279,7 +2285,7 @@
       const label = o.label || o.title || "Isometric illustration";
       const svgOpen = '<svg xmlns="http://www.w3.org/2000/svg" class="iso iso-' + o.theme + (o.class ? " " + o.class : "") + '" viewBox="' + vb.map(fmt).join(" ") + '" role="img" aria-label="' + escAttr(label) + '"' + (o.height ? ' style="height:' + o.height + (typeof o.height === "number" ? "px" : "") + ';width:100%"' : "") + ' preserveAspectRatio="xMidYMid meet">';
       const markup = svgOpen + (o.title ? "<title>" + escAttr(o.title) + "</title>" : "") + '<g class="iso-root">' + html + "</g></svg>";
-      if (!this.host) {
+      if (!this.host || typeof document === "undefined") {
         this._markup = markup;
         return markup;
       }
@@ -2358,12 +2364,14 @@
       }
       this.flows = Array.from(this.svg.querySelectorAll("[data-flow]"));
     }
+    /* SVG markup of the scene at rest (works without a DOM) */
     toString() {
-      if (!this._markup) {
-        this.host = null;
-        this.render();
-      }
-      return this._markup;
+      if (this.svg) return this.svg.outerHTML;
+      const host = this.host;
+      this.host = null;
+      const m = this.render();
+      this.host = host;
+      return m;
     }
     /* ── events (delegated) ── */
     _nodeFrom(el, evt) {
@@ -2705,7 +2713,15 @@
       (this.listeners[evt] || []).forEach((f) => f(arg, this));
     }
     setTheme(theme) {
-      if (this.svg) this.svg.classList.replace("iso-" + this.opts.theme, "iso-" + theme);
+      const old = "iso-" + this.opts.theme, nu = "iso-" + theme;
+      if (this.svg) {
+        this.svg.classList.remove(old);
+        this.svg.classList.add(nu);
+      }
+      if (this.figure) {
+        this.figure.el.classList.remove(old);
+        this.figure.el.classList.add(nu);
+      }
       this.opts.theme = theme;
       return this;
     }
@@ -2714,6 +2730,8 @@
       clock.remove(this);
       if (this._io) this._io.disconnect();
       if (this.svg) this.svg.remove();
+      if (this.figure) this.figure.el.remove();
+      this.emit("destroy");
     }
   };
   function containerOf(n) {
@@ -3304,6 +3322,19 @@
     [["control", 1.25], ["alt", 1.25], ["meta", 1.25], ["space", 7.5], ["meta", 1.25], ["alt", 1.25], ["control", 1.25]]
   ];
   function buildKeyboard(g, K) {
+    if (K.w < 120) {
+      g.box({
+        at: [K.x, K.y, K.z],
+        size: [K.w, K.d, K.h],
+        r: Math.min(3, K.d / 4),
+        chamfer: 0.6,
+        top: (f) => {
+          const p = Math.max(1.4, K.d * 0.12);
+          f.grid(p, p, K.w - 2 * p, K.d - 2 * p, 14, 4, { gap: Math.max(0.4, K.d * 0.04), r: 0.4, fill: "f-key", line: "ln-faint" });
+        }
+      });
+      return;
+    }
     g.box({ at: [K.x, K.y, K.z], size: [K.w, K.d, K.h], r: 6, chamfer: 1.5, top: (f) => f.rect(5, 5, K.w - 10, K.d - 10, { r: 3, line: "ln-soft" }) });
     const top = K.z + K.h, unit = (K.w - 12) / 15, pitch = (K.d - 12) / 5, k0x = K.x + 6, k0y = K.y + 6;
     ROWS.forEach((row, ri) => {

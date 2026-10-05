@@ -10,7 +10,7 @@
   "scripts": {
     "build": "node tools/bundle.mjs",
     "dev": "node tools/bundle.mjs --watch",
-    "test": "node --test tests/",
+    "test": "node --test tests/*.test.mjs",
     "render": "node skills/isometric-illustrations/scripts/render.mjs",
     "serve": "npx http-server -c-1 -p 8080 ."
   },

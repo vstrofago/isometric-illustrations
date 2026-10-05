@@ -225,6 +225,12 @@ const ROWS = [
   [['control', 1.25], ['alt', 1.25], ['meta', 1.25], ['space', 7.5], ['meta', 1.25], ['alt', 1.25], ['control', 1.25]],
 ];
 function buildKeyboard(g, K) {
+  if (K.w < 120) {
+    /* small keyboards: keys drawn on the top face */
+    g.box({ at: [K.x, K.y, K.z], size: [K.w, K.d, K.h], r: Math.min(3, K.d / 4), chamfer: 0.6,
+      top: (f) => { const p = Math.max(1.4, K.d * 0.12); f.grid(p, p, K.w - 2 * p, K.d - 2 * p, 14, 4, { gap: Math.max(0.4, K.d * 0.04), r: 0.4, fill: 'f-key', line: 'ln-faint' }); } });
+    return;
+  }
   g.box({ at: [K.x, K.y, K.z], size: [K.w, K.d, K.h], r: 6, chamfer: 1.5, top: (f) => f.rect(5, 5, K.w - 10, K.d - 10, { r: 3, line: 'ln-soft' }) });
   const top = K.z + K.h, unit = (K.w - 12) / 15, pitch = (K.d - 12) / 5, k0x = K.x + 6, k0y = K.y + 6;
   ROWS.forEach((row, ri) => {

@@ -98,7 +98,6 @@ export class Scene {
 
   /* ── DOM ── */
   render() {
-    if (!this.host && typeof document === 'undefined') return this.toString();
     const v = this.view, html = this.root.content(v, IDENTITY);
     this.measured = true;
     if (!this.vb || this.opts.refit) this.vb = this._viewBox();
@@ -106,7 +105,7 @@ export class Scene {
     const label = o.label || o.title || 'Isometric illustration';
     const svgOpen = '<svg xmlns="http://www.w3.org/2000/svg" class="iso iso-' + o.theme + (o.class ? ' ' + o.class : '') + '" viewBox="' + vb.map(fmt).join(' ') + '" role="img" aria-label="' + escAttr(label) + '"' + (o.height ? ' style="height:' + o.height + (typeof o.height === 'number' ? 'px' : '') + ';width:100%"' : '') + ' preserveAspectRatio="xMidYMid meet">';
     const markup = svgOpen + (o.title ? '<title>' + escAttr(o.title) + '</title>' : '') + '<g class="iso-root">' + html + '</g></svg>';
-    if (!this.host) { this._markup = markup; return markup; }
+    if (!this.host || typeof document === 'undefined') { this._markup = markup; return markup; }
     if (this.svg && this.svg.parentNode === this.host) {
       const tmp = document.createElement('div'); tmp.innerHTML = markup;
       const fresh = tmp.firstChild; this.host.replaceChild(fresh, this.svg); this.svg = fresh;
@@ -147,7 +146,13 @@ export class Scene {
     for (const el of els) { const n = this.byUid.get(+el.getAttribute('data-uid')); if (n) n.el = el; }
     this.flows = Array.from(this.svg.querySelectorAll('[data-flow]'));
   }
-  toString() { if (!this._markup) { this.host = null; this.render(); } return this._markup; }
+  /* SVG markup of the scene at rest (works without a DOM) */
+  toString() {
+    if (this.svg) return this.svg.outerHTML;
+    const host = this.host; this.host = null;
+    const m = this.render(); this.host = host;
+    return m;
+  }
 
   /* ── events (delegated) ── */
   _nodeFrom(el, evt) {
@@ -376,8 +381,20 @@ export class Scene {
   }
   on(evt, fn) { (this.listeners[evt] || (this.listeners[evt] = [])).push(fn); return this; }
   emit(evt, arg) { (this.listeners[evt] || []).forEach((f) => f(arg, this)); }
-  setTheme(theme) { if (this.svg) this.svg.classList.replace('iso-' + this.opts.theme, 'iso-' + theme); this.opts.theme = theme; return this; }
-  destroy() { this.destroyed = true; clock.remove(this); if (this._io) this._io.disconnect(); if (this.svg) this.svg.remove(); }
+  setTheme(theme) {
+    const old = 'iso-' + this.opts.theme, nu = 'iso-' + theme;
+    if (this.svg) { this.svg.classList.remove(old); this.svg.classList.add(nu); }
+    if (this.figure) { this.figure.el.classList.remove(old); this.figure.el.classList.add(nu); }
+    this.opts.theme = theme;
+    return this;
+  }
+  destroy() {
+    this.destroyed = true; clock.remove(this);
+    if (this._io) this._io.disconnect();
+    if (this.svg) this.svg.remove();
+    if (this.figure) this.figure.el.remove();
+    this.emit('destroy');
+  }
 }
 
 function containerOf(n) { let p = n.parent; while (p && p.flat) p = p.parent; return p; }

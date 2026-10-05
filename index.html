@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Iso · isometric illustrations</title>
+<meta name="description" content="An isometric illustration, diagram and animation engine in SVG, with a portable agent skill.">
+<style>
+  :root{--bg:#0b0c0d;--card:#121315;--ink:#ecebe6;--muted:rgba(236,235,230,.58);--faint:rgba(236,235,230,.08);--line:rgba(236,235,230,.12)}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 ui-sans-serif,"Geist",system-ui,-apple-system,"Segoe UI",sans-serif}
+  .mono,code,pre,.eyebrow,nav a{font-family:ui-monospace,"Geist Mono","SF Mono",Menlo,monospace}
+  a{color:inherit}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+  header{padding:56px 0 32px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 16px}
+  h1{font-size:clamp(34px,6vw,64px);line-height:1;font-weight:500;letter-spacing:-.03em;margin:0 0 18px}
+  .lede{max-width:640px;color:var(--muted);margin:0}
+  nav{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+  nav a{font-size:12px;text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:6px 12px}
+  nav a:hover{border-color:var(--muted)}
+  nav a.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .hero{margin:32px 0 8px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#151618}
+  .hero img{display:block;width:100%;height:auto}
+  section{padding:48px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:22px;font-weight:500;letter-spacing:-.01em;margin:0 0 6px}
+  .sub{color:var(--muted);margin:0 0 28px;max-width:640px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;text-decoration:none;display:flex;flex-direction:column}
+  .card:hover{border-color:rgba(236,235,230,.28)}
+  .card img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#151618;border-bottom:1px solid var(--line)}
+  .card div{padding:16px 18px 18px}
+  .card .eyebrow{margin:0 0 6px}
+  .card h3{font-size:16px;font-weight:500;margin:0 0 4px}
+  .card p{margin:0;color:var(--muted);font-size:14px}
+  pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;overflow:auto;font-size:13px;line-height:1.55;margin:0}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:820px){.cols{grid-template-columns:1fr}}
+  ul.plain{margin:0;padding:0;list-style:none;color:var(--muted)}
+  ul.plain li{padding:6px 0;border-top:1px solid var(--faint)}
+  ul.plain b{color:var(--ink);font-weight:500}
+  footer{padding:32px 0 56px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="eyebrow">Iso · engine + skill · v0.1</p>
+    <h1>Isometric illustrations,<br>drawn in hairlines.</h1>
+    <p class="lede">An SVG engine for isometric figures, dioramas and diagrams — with depth sorting, a timeline, travelling objects, interaction and frame-exact export — and a skill that teaches any agent to use it well.</p>
+    <nav>
+      <a class="primary" href="playground/">Open the playground</a>
+      <a href="examples/campus.html">Campus</a>
+      <a href="examples/desk-computer.html">Desk computer</a>
+      <a href="examples/architecture.html">Architecture</a>
+      <a href="skills/isometric-illustrations/SKILL.md">The skill</a>
+    </nav>
+    <div class="hero"><a href="examples/campus.html"><img src="docs/img/campus.png" alt="Isometric diorama of a ring campus with a wooded courtyard"></a></div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>Figures</h2>
+    <p class="sub">Every figure below is a single HTML file. Open one, read its source, change a number.</p>
+    <div class="grid">
+      <a class="card" href="examples/desk-computer.html"><img src="docs/img/desk-computer.png" alt="Desk computer, switched on"><div><p class="eyebrow">Fig 2 · object · interactive</p><h3>Desk computer</h3><p>Click to switch it on — a CRT line opens into the screen. Type on your keyboard.</p></div></a>
+      <a class="card" href="examples/campus.html"><img src="docs/img/campus.png" alt="Ring campus diorama"><div><p class="eyebrow">Fig 3 · diorama · animated</p><h3>Ring campus</h3><p>1,400 objects assemble back to front; lit cards ride the roof and phones rise to meet them.</p></div></a>
+      <a class="card" href="examples/architecture.html"><img src="docs/img/architecture.png" alt="Service architecture diagram"><div><p class="eyebrow">Fig 4 · diagram · data-driven</p><h3>Service architecture</h3><p>Nodes on a grid, routed edges, packets in flight. Hover a service.</p></div></a>
+      <a class="card" href="examples/server-room.html"><img src="docs/img/server-room.png" alt="Server room"><div><p class="eyebrow">Fig 5 · JSON spec</p><h3>Server room</h3><p>The whole figure is a JSON document rendered with <code>Iso.render()</code>.</p></div></a>
+      <a class="card" href="examples/hello.html"><img src="docs/img/hello.png" alt="A laptop and a lit card"><div><p class="eyebrow">Fig 1 · template</p><h3>Hello</h3><p>The smallest useful figure: a platform, an object, one lit moment, one motion.</p></div></a>
+      <a class="card" href="playground/"><img src="docs/img/playground.png" alt="Playground"><div><p class="eyebrow">Tool</p><h3>Playground</h3><p>Edit JSON or JS, see it live, switch themes, export SVG, PNG or a self-contained page.</p></div></a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div>
+      <h2>Ten lines to a figure</h2>
+      <p class="sub">Place objects in world units, let the engine sort, frame and animate them.</p>
+<pre><code>&lt;div id="app"&gt;&lt;/div&gt;
+&lt;script src="dist/iso.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+const s = Iso.scene('#app', { figure: { index: 'Fig. 1', title: 'Hello' } });
+s.platform({ size: [160, 120] });
+s.laptop({ at: [-10, 0, 0] });
+s.card({ id: 'card', at: [44, 24, 0] });
+s.float('card', { amp: 4 });
+s.assemble();
+&lt;/script&gt;</code></pre>
+    </div>
+    <div>
+      <h2>What is inside</h2>
+      <p class="sub">No dependencies at runtime. 35 KB gzipped.</p>
+      <ul class="plain">
+        <li><b>Primitives</b> — rounded boxes with chamfers, prisms, cylinders, cones, tubes, spheres, panels, hulls, text on planes, connectors, ribbons.</li>
+        <li><b>Depth</b> — topological sorting by separating axes; moving objects re-sort every frame.</li>
+        <li><b>Motion</b> — timelines, tweens, paths, float, travel, orbit, pulse, blink, spin, assemble, draw-on, typewriter.</li>
+        <li><b>Prefabs</b> — 28 objects: devices, scenery, buildings, diagram blocks, a CRT desk computer.</li>
+        <li><b>Themes</b> — dark, light, paper, blueprint, terminal; materials lit, glass, screen, ghost, tint.</li>
+        <li><b>Export</b> — SVG, PNG, MP4, GIF, WebM, self-contained HTML; deterministic frames.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer><div class="wrap mono">Iso · MIT · engine in <a href="engine/src/">engine/src</a>, skill in <a href="skills/isometric-illustrations/">skills/isometric-illustrations</a></div></footer>
+</body>
+</html>

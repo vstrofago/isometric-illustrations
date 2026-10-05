@@ -670,6 +670,11 @@ export class Text extends Node {
     if (!pl) {
       const w = d.w(x, y, z), p = d.P(w[0], w[1], w[2]);
       const dx = o.dx || 0, dy = o.dy || 0;
+      /* estimate the text box so fitting includes it (mono ≈ 0.62em per char, labels are tracked) */
+      const tw = Math.max(...lines.map((l) => l.length)) * size * (cls.includes('tx-label') ? 0.72 : 0.62);
+      const x0 = p[0] + dx - (anchor === 'middle' ? tw / 2 : anchor === 'end' ? tw : 0), y1 = p[1] + dy;
+      const b = d.b;
+      b[0] = Math.min(b[0], x0); b[2] = Math.max(b[2], x0 + tw); b[1] = Math.min(b[1], y1 - size); b[3] = Math.max(b[3], y1 + lh * (lines.length - 1) + size * 0.3);
       d.raw('<text class="' + cls + '" transform="translate(' + fmt(p[0] + dx) + ' ' + fmt(p[1] + dy) + ')" font-size="' + fmt(size) + '" text-anchor="' + anchor + '"' + ls + wt + '>' + tsp + '</text>');
       return;
     }

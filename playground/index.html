@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Iso playground</title>
+<style>
+  :root{--bg:#0b0c0d;--panel:#111214;--ink:#ecebe6;--muted:rgba(236,235,230,.55);--faint:rgba(236,235,230,.1);--line:rgba(236,235,230,.16);--err:#e0806f}
+  :root[data-page="light"]{--bg:#f2f1ed;--panel:#fbfaf7;--ink:#121211;--muted:rgba(18,18,17,.58);--faint:rgba(18,18,17,.08);--line:rgba(18,18,17,.16);--err:#b8342a}
+  :root[data-page="paper"]{--bg:#e9e3d6;--panel:#f3eee4;--ink:#2a241b;--muted:rgba(42,36,27,.6);--faint:rgba(42,36,27,.1);--line:rgba(42,36,27,.18);--err:#a3402d}
+  :root[data-page="blueprint"]{--bg:#0a2440;--panel:#0d2a4a;--ink:#d8ecff;--muted:rgba(216,236,255,.6);--faint:rgba(216,236,255,.1);--line:rgba(216,236,255,.2);--err:#ffb3a1}
+  :root[data-page="terminal"]{--bg:#050c08;--panel:#07110b;--ink:#9dffbf;--muted:rgba(157,255,191,.6);--faint:rgba(157,255,191,.1);--line:rgba(157,255,191,.2);--err:#ffb3a1}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:13px/1.5 ui-monospace,"Geist Mono","SF Mono",Menlo,monospace}
+  header{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+  header h1{font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;margin:0 8px 0 0}
+  header .sp{flex:1}
+  label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;gap:6px;align-items:center}
+  select,button{font:inherit;font-size:12px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;height:28px;padding:0 10px;cursor:pointer}
+  button:hover,select:hover{border-color:var(--muted)}
+  button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .seg button{border:0;border-radius:0;height:26px}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+  .split{display:grid;grid-template-columns:minmax(320px,38%) 1fr;height:calc(100% - 57px)}
+  .editor{display:flex;flex-direction:column;border-right:1px solid var(--line);min-height:0}
+  textarea{flex:1;width:100%;resize:none;border:0;background:var(--panel);color:var(--ink);font:12px/1.55 ui-monospace,"Geist Mono","SF Mono",Menlo,monospace;padding:16px;tab-size:2;white-space:pre;min-height:0}
+  #err{margin:0;padding:10px 16px;border-top:1px solid var(--line);color:var(--muted);min-height:40px;white-space:pre-wrap}
+  #err.bad{color:var(--err)}
+  .preview{overflow:auto;padding:24px;min-height:0}
+  .preview .iso-fig{max-width:1100px;margin:0 auto}
+  @media (max-width:820px){.split{grid-template-columns:1fr;height:auto}.editor{border-right:0;border-bottom:1px solid var(--line)}textarea{height:46vh}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Iso · playground</h1>
+  <label>Preset <select id="preset"></select></label>
+  <label>Theme <select id="theme"><option>dark</option><option>light</option><option>paper</option><option>blueprint</option><option>terminal</option></select></label>
+  <div class="seg" role="group" aria-label="Editor mode"><button id="m-json" aria-pressed="true">JSON</button><button id="m-js" aria-pressed="false">JS</button></div>
+  <span class="sp"></span>
+  <button id="replay" title="Restart the animation">Replay</button>
+  <button id="svg">SVG</button>
+  <button id="png">PNG</button>
+  <button id="html" title="Download a self-contained page">HTML</button>
+</header>
+<div class="split">
+  <section class="editor">
+    <textarea id="code" spellcheck="false" aria-label="Scene source"></textarea>
+    <p id="err" aria-live="polite">Edit the scene; it re-renders as you type.</p>
+  </section>
+  <section class="preview"><div id="stage"></div></section>
+</div>
+<script src="../dist/iso.js" id="iso-engine"></script>
+<script src="presets.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const P = window.ISO_PRESETS;
+let mode = 'json', scene = null, timer = 0;
+for (const k in P) { const o = document.createElement('option'); o.value = k; o.textContent = P[k].label; $('preset').appendChild(o); }
+
+/* JSON with short arrays kept on one line */
+function pretty(o) {
+  return JSON.stringify(o, null, 2).replace(/\[\s+([^\[\]{}]*?)\s+\]/g, (m, inner) => '[' + inner.split(/,\s*/).map((x) => x.trim()).join(', ') + ']');
+}
+function setMode(m) { mode = m; $('m-json').setAttribute('aria-pressed', m === 'json'); $('m-js').setAttribute('aria-pressed', m === 'js'); }
+function load(key) {
+  const p = P[key]; setMode(p.mode);
+  $('code').value = p.mode === 'json' ? pretty(p.spec) : p.code;
+  run();
+}
+function run() {
+  const src = $('code').value, theme = $('theme').value, stage = $('stage');
+  document.documentElement.dataset.page = theme;
+  let next = null;
+  try {
+    if (scene) { scene.destroy(); scene = null; }
+    stage.innerHTML = '';
+    if (mode === 'json') { const spec = JSON.parse(src); spec.theme = theme; next = Iso.render(spec, stage); }
+    else { next = new Function('Iso', 'host', src)(Iso, stage); if (next && next.setTheme) next.setTheme(theme); }
+    scene = next || null;
+    $('err').textContent = scene ? scene.root.findAll(() => true).length + ' nodes · ' + (mode === 'json' ? 'JSON spec' : 'JS') : 'The code did not return a scene.';
+    $('err').className = scene ? '' : 'bad';
+  } catch (e) { $('err').textContent = e.message; $('err').className = 'bad'; }
+}
+$('code').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(run, 450); });
+$('code').addEventListener('keydown', (e) => { if (e.key === 'Tab') { e.preventDefault(); const t = e.target, s = t.selectionStart; t.setRangeText('  ', s, t.selectionEnd, 'end'); } });
+$('preset').addEventListener('change', (e) => load(e.target.value));
+$('theme').addEventListener('change', run);
+$('m-json').addEventListener('click', () => { setMode('json'); run(); });
+$('m-js').addEventListener('click', () => { setMode('js'); run(); });
+$('replay').addEventListener('click', run);
+$('svg').addEventListener('click', () => scene && scene.download('illustration', 'svg'));
+$('png').addEventListener('click', () => scene && scene.download('illustration', 'png', { scale: 2 }));
+$('html').addEventListener('click', async () => {
+  const el = $('iso-engine');
+  const engine = el.textContent.trim() || (await fetch(el.src).then((r) => r.text()).catch(() => ''));
+  if (!engine) { $('err').textContent = 'Could not read the engine source (open the playground over http).'; $('err').className = 'bad'; return; }
+  const theme = $('theme').value, src = $('code').value;
+  const body = mode === 'json'
+    ? 'Iso.render(' + JSON.stringify({ ...JSON.parse(src), theme }) + ", '#app');"
+    : '(function (Iso, host) {\n' + src + '\n})(Iso, document.getElementById("app"));';
+  const page = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Illustration</title>' +
+    '<style>html,body{margin:0;background:' + getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() + '}main{max-width:1000px;margin:0 auto;padding:24px 16px}</style></head>' +
+    '<body><main id="app"></main>\n<script>\n' + engine.replace(/<\/script/gi, '<\\/script') + '\n<\/script>\n<script>\n' + body + '\n<\/script>\n</body></html>\n';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([page], { type: 'text/html' })); a.download = 'illustration.html';
+  document.body.appendChild(a); a.click(); a.remove();
+});
+load(new URLSearchParams(location.search).get('preset') || 'hello');
+</script>
+</body>
+</html>
