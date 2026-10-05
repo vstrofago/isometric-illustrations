@@ -6,8 +6,8 @@ pulida y repetible.
 
 | | |
 |---|---|
-| ![Campus](docs/img/campus.gif) | ![Ordenador de escritorio](docs/img/desk-computer.gif) |
-| **Fig. 3 · Ring campus** — 1.400 objetos que entran de atrás hacia delante; tarjetas iluminadas recorren la cubierta y los móviles se elevan a su paso. | **Fig. 2 · Desk computer** — clic para encender (línea CRT → apertura → brillo) y escribe en tu teclado. |
+| ![Línea de empaquetado](docs/img/packing-line.gif) | ![Ordenador de escritorio](docs/img/desk-computer.gif) |
+| **Fig. 3 · Packing line** — las cajas salen abiertas de la formadora, se precintan en el túnel, giran en la esquina, reciben su etiqueta en el escáner y entran en el camión; una carretilla trabaja entre las estanterías. | **Fig. 2 · Desk computer** — clic para encender (línea CRT → apertura → brillo) y escribe en tu teclado. |
 | ![Arquitectura](docs/img/architecture.gif) | ![Server room](docs/img/server-room.png) |
 | **Fig. 4 · Arquitectura** — diagrama a partir de datos: nodos en rejilla, aristas enrutadas, paquetes en tránsito. | **Fig. 5 · Server room** — la figura entera es un JSON renderizado con `Iso.render()`. |
 
@@ -52,8 +52,9 @@ Los ejemplos también funcionan abriendo el HTML directamente (`file://`).
   `lit`, `glass`, `screen`, `dark`, `ghost`, `wire`, `solid`, `accent`, tintes.
 - **Exportación**: SVG con colores incrustados, PNG; MP4/GIF/WebM fotograma a fotograma con la CLI.
 
-**Prefabs** (28): plataforma, árboles y bosques, plantas, farolas, bancos, coches, paneles solares,
-marcadores, zonas, placas, escritorio · móvil, tarjeta, portátil, monitor, teclado, el ordenador de
+**Prefabs** (35): plataforma, árboles y bosques, plantas, farolas, bancos, coches, paneles solares,
+marcadores, zonas, placas, escritorio · caja de cartón, palé, estantería, carretilla elevadora, camión,
+escáner, túnel · móvil, tarjeta, portátil, monitor, teclado, el ordenador de
 escritorio con CRT, servidor, base de datos, chip, router · edificio, torre, portal de cristal, cinta
 transportadora, pila de capas, bloque de diagrama con icono. Más 34 iconos de línea.
 
@@ -108,7 +109,6 @@ docs/img/            capturas y GIFs
 ## Origen
 
 El estilo parte de la figura `DeskComputer` del sistema de diseño **Stoico** (líneas de 1px, rellenos
-a un pelo del fondo, un único elemento iluminado) y de las referencias en vídeo del campus en anillo y
-del ordenador con encendido CRT. El motor generaliza aquellas primitivas en un sistema completo.
+a un pelo del fondo, un único elemento iluminado) y de las referencias en vídeo (una diorama animada y el ordenador con encendido CRT). El motor generaliza aquellas primitivas en un sistema completo.
 
 Licencia MIT.

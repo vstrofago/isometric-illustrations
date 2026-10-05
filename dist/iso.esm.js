@@ -490,7 +490,7 @@ var Node = class {
     this.opts = { ...opts };
     this.id = opts.id || null;
     this.parent = null;
-    this.t = { x: 0, y: 0, z: 0, scale: 1, opacity: 1 };
+    this.t = { x: 0, y: 0, z: 0, scale: 1, opacity: opts.opacity ?? 1 };
     this.a = { x: 0, y: 0, z: 0, scale: 1, opacity: 1 };
     this.el = null;
     this.handlers = null;
@@ -548,17 +548,17 @@ var Node = class {
     if (TRANSFORM_KEYS.includes(key)) {
       if (this.t[key] !== value) {
         this.t[key] = value;
-        this.moved = true;
+        if (key === "opacity") this.fade = true;
+        else this.moved = true;
         this._wake();
       }
     } else if (this.opts[key] !== value) {
       this.opts[key] = value;
-      if (key === "material" || key === "class" || key === "color" || key === "style" || key === "pressed" || key === "label" || key === "interactive" || key === "glow") this.restyle = true;
-      else this.dirty = true;
       if (key === "hidden") {
         this.hidden = !!value;
         this.restyle = true;
-      }
+      } else if (key === "material" || key === "class" || key === "color" || key === "style" || key === "pressed" || key === "label" || key === "interactive" || key === "glow") this.restyle = true;
+      else this.dirty = true;
       this._wake();
     }
     return this;
@@ -2529,11 +2529,13 @@ var Scene = class {
     clock.kick();
   }
   update(dt = 0, seeking = false) {
+    this._frame = (this._frame || 0) + 1;
     for (const n of this.touchedA) {
       const a = n.a;
+      if (a.x || a.y || a.z || a.scale !== 1) n.moved = true;
+      if (a.opacity !== 1) n.fade = true;
       a.x = a.y = a.z = 0;
       a.scale = a.opacity = 1;
-      n.moved = true;
       this.pending.add(n);
     }
     this.touchedA.clear();
@@ -2547,12 +2549,14 @@ var Scene = class {
       el.style.strokeDashoffset = fmt(-sp * this.time);
     }
     this.sync();
+    this._settle();
   }
   /* additive offset helper for behaviours */
   nudge(node, key, value) {
     if (key === "scale" || key === "opacity") node.a[key] *= value;
     else node.a[key] += value;
-    node.moved = true;
+    if (key === "opacity") node.fade = true;
+    else node.moved = true;
     this.touchedA.add(node);
     this.pending.add(node);
   }
@@ -2594,18 +2598,20 @@ var Scene = class {
     }
     for (const n of nodes) {
       if (n.isGroup && n.flat) {
-        if (n.moved || n.restyle) for (const it of n.items()) {
+        if (n.moved || n.restyle || n.fade) for (const it of n.items()) {
           it.sync(v);
-          place.add(it);
+          if (n.moved || n.restyle) place.add(it);
         }
         n.moved = false;
         n.restyle = false;
+        n.fade = false;
         continue;
       }
-      if (n.moved || n.restyle) {
+      if (n.moved || n.restyle || n.fade) {
         n.sync(v);
         if (n.moved) place.add(n);
         n.moved = false;
+        n.fade = false;
       }
     }
     const containers = /* @__PURE__ */ new Map();
@@ -2645,14 +2651,17 @@ var Scene = class {
     let st = this._containers.get(container);
     const zs = this.view.ZS;
     if (!st || st.stale) {
-      st = { dyn: /* @__PURE__ */ new Set(), slotOf: /* @__PURE__ */ new Map(), bySlot: /* @__PURE__ */ new Map(), placer: null, statics: null, stale: false, parent: container === this.root ? this.rootEl : container.el };
+      st = { dyn: /* @__PURE__ */ new Set(), last: /* @__PURE__ */ new Map(), slotOf: /* @__PURE__ */ new Map(), bySlot: /* @__PURE__ */ new Map(), placer: null, statics: null, stale: false, lastResort: this._frame || 0, parent: container === this.root ? this.rootEl : container.el };
       this._containers.set(container, st);
     }
     if (!st.parent) return;
     let rebuild = !st.placer;
-    for (const m of movers) if (!st.dyn.has(m)) {
-      st.dyn.add(m);
-      rebuild = true;
+    for (const m of movers) {
+      if (!st.dyn.has(m)) {
+        st.dyn.add(m);
+        rebuild = true;
+      }
+      st.last.set(m, this._frame || 0);
     }
     const touched = /* @__PURE__ */ new Set();
     const assign = (d) => {
@@ -2682,6 +2691,37 @@ var Scene = class {
       st.bySlot.clear();
       for (const d of st.dyn) assign(d);
     } else for (const m of movers) assign(m);
+    if (st.dyn.size > 1 && st.dyn.size <= 160) {
+      const list = [];
+      for (const d of st.dyn) if (st.slotOf.has(d)) list.push({ d, it: makeItem(d, d.sortBox(), zs, d.order) });
+      const move = (d, slot) => {
+        const old = st.slotOf.get(d);
+        const a = st.bySlot.get(old);
+        if (a) a.delete(d);
+        st.slotOf.set(d, slot);
+        let b = st.bySlot.get(slot);
+        if (!b) st.bySlot.set(slot, b = /* @__PURE__ */ new Set());
+        b.add(d);
+        touched.add(old);
+        touched.add(slot);
+      };
+      for (let pass = 0; pass < 3; pass++) {
+        let changed = false;
+        for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+          const A = list[i], B = list[j];
+          if (!A.it.hex || !B.it.hex || !hexOverlap(A.it.hex, B.it.hex)) continue;
+          const c = compareItems(A.it, B.it), sa = st.slotOf.get(A.d), sb = st.slotOf.get(B.d);
+          if (c < 0 && sa > sb) {
+            move(B.d, sa);
+            changed = true;
+          } else if (c > 0 && sb > sa) {
+            move(A.d, sb);
+            changed = true;
+          }
+        }
+        if (!changed) break;
+      }
+    }
     for (const slot of touched) {
       const set = st.bySlot.get(slot);
       if (!set || !set.size) continue;
@@ -2696,6 +2736,37 @@ var Scene = class {
         next = el;
       }
     }
+  }
+  /* Items that stopped moving go back into the static order: one full depth sort of the container. */
+  _settle() {
+    if (!this._containers) return;
+    const f = this._frame;
+    for (const [c, st] of this._containers) {
+      if (!st.dyn.size || st.stale || f - st.lastResort < 30) continue;
+      let settled = 0;
+      for (const d of st.dyn) if (f - (st.last.get(d) ?? 0) > 20) settled++;
+      if (settled && (settled >= Math.max(8, st.dyn.size * 0.2) || st.dyn.size > 160)) this._resort(c, st);
+    }
+  }
+  _resort(container, st) {
+    const zs = this.view.ZS, f = this._frame;
+    const nodes = (container.sorted || []).filter((n) => n.el && n.el.parentNode === st.parent);
+    const ordered = depthSort(nodes.map((n) => makeItem(n, n.sortBox(), zs, n.order))).map((it) => it.node);
+    container.sorted = ordered;
+    let cursor = st.parent.firstElementChild;
+    for (const n of ordered) {
+      if (n.el === cursor) cursor = cursor.nextElementSibling;
+      else st.parent.insertBefore(n.el, cursor);
+    }
+    for (const d of Array.from(st.dyn)) if (f - (st.last.get(d) ?? 0) > 20) {
+      st.dyn.delete(d);
+      st.last.delete(d);
+    }
+    st.placer = null;
+    st.slotOf.clear();
+    st.bySlot.clear();
+    st.lastResort = f;
+    if (st.dyn.size) this._place(container, /* @__PURE__ */ new Set());
   }
   /* ── utilities ── */
   /* world point → CSS pixels relative to the SVG's top-left (for HTML overlays) */
@@ -3469,32 +3540,64 @@ function install3(define2, Iso2) {
   });
   define2("conveyor", (g, o) => {
     const L = o.length ?? 120, w = o.w ?? 18, h = o.h ?? 8, axis = o.axis || "x", rollers = o.rollers ?? Math.round(L / 8);
-    const size = axis === "x" ? [L, w, h] : [w, L, h];
-    g.box({
-      at: [-size[0] / 2, -size[1] / 2, 0],
-      size,
-      r: 1.5,
-      chamfer: 0.8,
-      material: o.material,
-      top: (f) => {
-        if (axis === "x") for (let i = 0; i <= rollers; i++) {
-          const u = 3 + i * (L - 6) / rollers;
-          f.line(u, 2.5, u, w - 2.5, "ln-faint");
+    const legs = o.legs ?? h > 10, rails = o.rails ?? legs;
+    const X = (a, b) => axis === "x" ? a : b;
+    const rollerFace = (f) => {
+      if (axis === "x") for (let i = 0; i <= rollers; i++) {
+        const u = 3 + i * (L - 6) / rollers;
+        f.line(u, 2.5, u, w - 2.5, "ln-faint");
+      }
+      else for (let i = 0; i <= rollers; i++) {
+        const v = 3 + i * (L - 6) / rollers;
+        f.line(2.5, v, w - 2.5, v, "ln-faint");
+      }
+      if (axis === "x") {
+        f.line(0, 2.2, L, 2.2, "ln-soft");
+        f.line(0, w - 2.2, L, w - 2.2, "ln-soft");
+      } else {
+        f.line(2.2, 0, 2.2, L, "ln-soft");
+        f.line(w - 2.2, 0, w - 2.2, L, "ln-soft");
+      }
+    };
+    if (!legs) {
+      const size = X([L, w, h], [w, L, h]);
+      g.box({
+        at: [-size[0] / 2, -size[1] / 2, 0],
+        size,
+        r: 1.5,
+        chamfer: 0.8,
+        material: o.material,
+        top: rollerFace,
+        left: (f) => f.hlines(4, f.h * 0.5, f.w - 8, 0, 1, "ln-faint")
+      });
+    } else {
+      const t = o.belt ?? 4, z0 = h - t, n = Math.max(2, Math.round(L / (o.legSpacing ?? 34)) + 1), p = 2;
+      for (let i = 0; i < n; i++) {
+        const s = -L / 2 + 3 + i * (L - 6 - p) / (n - 1);
+        for (const side of [-1, 1]) {
+          const q = side < 0 ? -w / 2 + 1 : w / 2 - 1 - p;
+          g.box({ at: X([s, q, 0], [q, s, 0]), size: [p, p, z0], material: o.material });
         }
-        else for (let i = 0; i <= rollers; i++) {
-          const v = 3 + i * (L - 6) / rollers;
-          f.line(2.5, v, w - 2.5, v, "ln-faint");
+      }
+      const size = X([L, w, t], [w, L, t]);
+      g.box({
+        at: [-size[0] / 2, -size[1] / 2, z0],
+        size,
+        r: 1,
+        chamfer: 0.5,
+        material: o.material,
+        top: rollerFace,
+        left: axis === "x" ? (f) => f.hlines(3, t / 2, f.w - 6, 0, 1, "ln-faint") : void 0,
+        right: axis === "y" ? (f) => f.hlines(3, t / 2, f.w - 6, 0, 1, "ln-faint") : void 0
+      });
+      if (rails) {
+        const rh = o.railH ?? 2.6, rt = 1.2;
+        for (const side of [-1, 1]) {
+          const q = side < 0 ? -w / 2 : w / 2 - rt;
+          g.box({ class: "rail", at: X([-L / 2, q, h], [q, -L / 2, h]), size: X([L, rt, rh], [rt, L, rh]), r: 0.4, material: o.material });
         }
-        if (axis === "x") {
-          f.line(0, 2.2, L, 2.2, "ln-soft");
-          f.line(0, w - 2.2, L, w - 2.2, "ln-soft");
-        } else {
-          f.line(2.2, 0, 2.2, L, "ln-soft");
-          f.line(w - 2.2, 0, w - 2.2, L, "ln-soft");
-        }
-      },
-      left: (f) => f.hlines(4, f.h * 0.5, f.w - 8, 0, 1, "ln-faint")
-    });
+      }
+    }
     return {
       track(lift = 0) {
         const at = this.opts.at || [0, 0, 0];
@@ -3503,7 +3606,7 @@ function install3(define2, Iso2) {
         return Iso2.path.line(a, b);
       }
     };
-  });
+  }, { flat: true });
   define2("stack", (g, o) => {
     const [w, d] = o.size || [90, 70], t = o.t ?? 6, gap = o.gap ?? 14, layers = o.layers || [{ label: "Layer" }];
     layers.forEach((L, i) => {
@@ -3552,11 +3655,193 @@ function install3(define2, Iso2) {
   });
 }
 
+// engine/src/prefabs/logistics.js
+function install4(define2) {
+  define2("parcel", (g, o) => {
+    const [w, d, h] = o.size || [16, 13, 11];
+    const mat = o.material ?? "paper", id = (s2) => o.id ? o.id + "-" + s2 : void 0;
+    g.box({ at: [-w / 2, -d / 2, 0], size: [w, d, h], r: 0.5, material: mat, color: o.color });
+    const tapes = [
+      g.rect({ id: id("tape"), class: "tape", at: [-w / 2, -1.1, h], size: [w, 2.2], fill: "f-bevel", line: "ln-faint", material: mat }),
+      g.pane({ id: id("tape-side"), class: "tape", plane: "right", at: [w / 2, 1.1, h], w: 2.2, h: h * 0.42, fill: "f-bevel", line: "ln-faint", material: mat })
+    ];
+    const a = (o.flapAngle ?? 32) * Math.PI / 180, s = Math.sin(a), c = Math.cos(a), ft = 0.5;
+    const fd = d * 0.46, fw = w * 0.36;
+    const open = [
+      g.rect({ id: id("mouth"), at: [-w / 2 + 0.7, -d / 2 + 0.7, h], size: [w - 1.4, d - 1.4], fill: "f-dark", line: "ln-soft" }),
+      g.slab({ origin: [-w / 2, -d / 2, h], u: [w, 0, 0], v: [0, -s * fd, c * fd], w: [0, c * ft, s * ft], material: mat }),
+      g.slab({ origin: [-w / 2, -d / 2, h], u: [0, d, 0], v: [-s * fw, 0, c * fw], w: [c * ft, 0, s * ft], material: mat }),
+      g.slab({ origin: [w / 2, -d / 2, h], u: [0, d, 0], v: [s * fw, 0, c * fw], w: [-c * ft, 0, s * ft], material: mat }),
+      g.slab({ origin: [-w / 2, d / 2, h], u: [w, 0, 0], v: [0, s * fd, c * fd], w: [0, -c * ft, s * ft], material: mat })
+    ];
+    const lw = Math.min(w * 0.46, 9), lh = Math.min(h * 0.42, 5);
+    const label = g.pane({
+      id: id("label"),
+      class: "label",
+      plane: "left",
+      at: [w / 2 - lw - 1.6, d / 2, h * 0.78],
+      w: lw,
+      h: lh,
+      r: 0.4,
+      fill: o.labelLit === false ? "f-bg" : "f-lit",
+      line: "ln-faint",
+      draw: (f) => {
+        for (let i = 0; i < 6; i++) f.line(1 + i * (lw - 2) / 5.5, lh * 0.45, 1 + i * (lw - 2) / 5.5, lh - 0.8, "ln-strong");
+      }
+    });
+    const apply = (isOpen, hasLabel) => {
+      for (const n of tapes) n.set("hidden", isOpen);
+      for (const n of open) n.set("hidden", !isOpen);
+      label.set("hidden", !hasLabel);
+    };
+    const state = { open: !!o.open, label: !!o.label };
+    apply(state.open, state.label);
+    return {
+      state,
+      open(v = true) {
+        if (state.open !== v) {
+          state.open = v;
+          apply(state.open, state.label);
+        }
+        return this;
+      },
+      label(v = true) {
+        if (state.label !== v) {
+          state.label = v;
+          apply(state.open, state.label);
+        }
+        return this;
+      }
+    };
+  }, { sort: "none" });
+  define2("pallet", (g, o) => {
+    const [w, d] = o.size || [30, 26], R = rng(o.seed ?? 4);
+    for (const y of [-d / 2, -1.2, d / 2 - 2.4]) g.box({ at: [-w / 2, y, 0], size: [w, 2.4, 2.4], material: o.material });
+    const n = 5, bw = (w - (n - 1) * 1.4) / n;
+    for (let i = 0; i < n; i++) g.box({ at: [-w / 2 + i * (bw + 1.4), -d / 2, 2.4], size: [bw, d, 1.4], material: o.material });
+    if (o.load) {
+      const [cols, rows, layers] = o.load, gap = 0.6, top = 3.8;
+      const cw = (w - gap * (cols - 1)) / cols, cd = (d - gap * (rows - 1)) / rows, ch = o.boxH ?? Math.min(11, cw * 0.75);
+      for (let k = 0; k < layers; k++) for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+        if (k === layers - 1 && o.partial && R() < o.partial) continue;
+        g.parcel({ at: [-w / 2 + cw / 2 + i * (cw + gap), -d / 2 + cd / 2 + j * (cd + gap), top + k * (ch + 0.3)], size: [cw, cd, ch], material: o.boxMaterial });
+      }
+    }
+  });
+  define2("rack", (g, o) => {
+    const [w, d] = o.size || [70, 24], h = o.h ?? 54, levels = o.levels ?? 3, p = 2.2, R = rng(o.seed ?? 5), fill = o.fill ?? 0.7;
+    for (const [x, y] of [[-w / 2, -d / 2], [w / 2 - p, -d / 2], [-w / 2, d / 2 - p], [w / 2 - p, d / 2 - p]]) g.box({ at: [x, y, 0], size: [p, p, h], material: o.material });
+    const step = (h - 3) / levels;
+    for (let i = 0; i < levels; i++) {
+      const z = 2 + i * step;
+      g.box({ at: [-w / 2, -d / 2 + p, z], size: [w, d - 2 * p, 1.6], material: o.material, left: (f) => f.hlines(2, 0.8, f.w - 4, 0, 1, "ln-faint") });
+      const slots = Math.max(1, Math.floor((w - 4) / 17));
+      const sw = (w - 4) / slots;
+      for (let k = 0; k < slots; k++) {
+        if (R() > fill) continue;
+        const bw = sw * R.range(0.68, 0.86), bd = (d - 2 * p) * R.range(0.62, 0.82), bh = Math.min(step - 3.5, R.range(7, 12));
+        g.parcel({ at: [-w / 2 + 2 + sw * (k + 0.5), R.range(-1, 1), z + 1.6], size: [bw, bd, bh], material: o.boxMaterial });
+      }
+    }
+  });
+  define2("forklift", (g, o) => {
+    const fz = o.lift ?? 1.4, mat = o.material;
+    for (const [x, y] of [[-9.5, -8.2], [4.5, -8.2], [-9.5, 6], [4.5, 6]]) g.box({ at: [x, y, 0], size: [5, 2.2, 5], r: 1, material: "dark" });
+    g.box({ at: [-13, -6.5, 1.5], size: [3, 13, 10], r: 1.5, chamfer: 0.6, material: mat });
+    g.box({ at: [-10, -6, 1.5], size: [18, 12, 6.5], r: 2, chamfer: 0.8, material: mat, left: (f) => f.hlines(3, 3, f.w - 6, 0, 1, "ln-faint") });
+    g.box({ at: [-7, -3, 8], size: [5, 6, 3.5], r: 1, material: "dark" });
+    for (const [x, y] of [[-9.6, -5.6], [-1.6, -5.6], [-9.6, 4.6], [-1.6, 4.6]]) g.box({ at: [x, y, 8], size: [1, 1, 14] });
+    g.box({ at: [-10, -6, 22], size: [9.5, 12, 1], r: 0.6, material: mat, top: (f) => f.hlines(1.5, 2, f.w - 3, f.h - 4, 4, "ln-faint") });
+    for (const y of [-4.6, 3.4]) g.box({ at: [8, y, 1.2], size: [1.6, 1.2, 26] });
+    g.box({ at: [8, -4.6, 26], size: [1.6, 9.2, 1.2] });
+    g.box({ at: [9.6, -5, fz], size: [1, 10, 9], material: "dark" });
+    for (const y of [-4, 2.4]) g.box({ at: [10.6, y, fz], size: [13, 1.6, 0.8] });
+    if (o.load) g.pallet({ at: [17.4, 0, fz + 0.8], size: [13, 12], load: [1, 1, 2], boxH: 6 });
+  });
+  define2("truck", (g, o) => {
+    const L = o.length ?? 90, W = o.w ?? 40, H = o.h ?? 44, fl = o.floor ?? 12, mat = o.material;
+    for (const x of [L / 2 - 16, L / 2 - 28, -L / 2 - 14]) for (const y of [-W / 2 + 1, W / 2 - 3.4]) g.box({ at: [x, y, 0], size: [9, 2.4, 9], r: 2, material: "dark" });
+    g.box({ at: [-L / 2 - 24, -W / 2 + 4, 4], size: [L + 22, W - 8, fl - 4], material: "dark" });
+    g.box({
+      at: [-L / 2 - 25, -W / 2 + 2, 6],
+      size: [22, W - 4, fl + 18],
+      r: 3,
+      chamfer: 1,
+      material: mat,
+      left: (f) => {
+        f.rect(f.w * 0.5, 4, f.w * 0.42, f.h * 0.38, { r: 1.5, fill: "f-screen", line: "ln-soft" });
+        f.line(f.w * 0.46, 4, f.w * 0.46, f.h - 3, "ln-faint");
+      }
+    });
+    g.box({
+      at: [-L / 2, -W / 2, fl],
+      size: [L, W, H],
+      r: 1.5,
+      chamfer: 1,
+      material: mat,
+      left: (f) => {
+        f.vlines(4, 3, f.w - 8, f.h - 6, Math.round(L / 8), "ln-faint");
+        if (o.text) f.text(o.text, 8, f.h * 0.62, { size: 6, cls: "tx tx-label", spacing: 1.5 });
+      },
+      right: (f) => {
+        if (o.open === false) {
+          f.hlines(3, 3, f.w - 6, f.h - 6, 10, "ln-soft");
+          return;
+        }
+        f.rect(2.5, 2.5, f.w - 5, f.h - 4, { r: 1, fill: "f-dark", line: "ln" });
+        f.hlines(3, 3, f.w - 6, 5, 4, "ln-faint");
+      },
+      top: (f) => f.rect(2, 2, f.w - 4, f.h - 4, { r: 1, line: "ln-faint" })
+    });
+  });
+  define2("scanner", (g, o) => {
+    const w = o.w ?? 30, h = o.h ?? 38, t = o.t ?? 4, from = o.beamFrom ?? 0, axis = o.axis || "x", mat = o.material;
+    const id = (s) => o.id ? o.id + "-" + s : void 0;
+    if (axis === "x") {
+      g.box({ at: [-t / 2, -w / 2 - t, 0], size: [t, t, h], r: 0.8, material: mat });
+      g.box({ at: [-t / 2, w / 2, 0], size: [t, t, h], r: 0.8, material: mat, left: (f) => f.rect(f.w / 2 - 0.8, 4, 1.6, 1.6, { r: 0.8, fill: "f-lit", line: null }) });
+      g.box({ at: [-t / 2 - 1, -w / 2 - t, h], size: [t + 2, w + 2 * t, 5], r: 1, chamfer: 0.6, material: mat, right: (f) => f.rect(t, 1.6, f.w - 2 * t, 1.4, { r: 0.7, fill: "f-lit", line: null }) });
+      g.pane({ id: id("beam"), class: "scan-beam", plane: "right", at: [0, w / 2, h], w, h: h - from, fill: "f-lit", line: null, material: "lit", glow: o.glow ?? true, style: { opacity: o.beamOpacity ?? 0.35 } });
+    } else {
+      g.box({ at: [-w / 2 - t, -t / 2, 0], size: [t, t, h], r: 0.8, material: mat });
+      g.box({ at: [w / 2, -t / 2, 0], size: [t, t, h], r: 0.8, material: mat, right: (f) => f.rect(f.w / 2 - 0.8, 4, 1.6, 1.6, { r: 0.8, fill: "f-lit", line: null }) });
+      g.box({ at: [-w / 2 - t, -t / 2 - 1, h], size: [w + 2 * t, t + 2, 5], r: 1, chamfer: 0.6, material: mat, left: (f) => f.rect(t, 1.6, f.w - 2 * t, 1.4, { r: 0.7, fill: "f-lit", line: null }) });
+      g.pane({ id: id("beam"), class: "scan-beam", plane: "left", at: [-w / 2, 0, h], w, h: h - from, fill: "f-lit", line: null, material: "lit", glow: o.glow ?? true, style: { opacity: o.beamOpacity ?? 0.35 } });
+    }
+  }, { flat: true });
+  define2("tunnel", (g, o) => {
+    const L = o.length ?? 30, w = o.w ?? 30, h = o.h ?? 36, t = o.t ?? 3, roof = o.roof ?? 7, axis = o.axis || "x", mat = o.material;
+    const id = (s) => o.id ? o.id + "-" + s : void 0;
+    const strips = (f) => {
+      const n = Math.round(f.w / 3);
+      for (let i = 1; i < n; i++) f.line(i * f.w / n, 0, i * f.w / n, f.h, "ln-faint");
+    };
+    const panel = (f) => {
+      f.rect(4, 5, f.w - 8, f.h * 0.34, { r: 1, fill: "f-screen", line: "ln-soft" });
+      f.hlines(5, f.h * 0.58, f.w * 0.45, f.h * 0.22, 4, "ln-faint");
+    };
+    if (axis === "x") {
+      g.box({ at: [-L / 2, -w / 2 - t, 0], size: [L, t, h], material: mat });
+      g.box({ at: [-L / 2, w / 2, 0], size: [L, t, h], r: 0.6, material: mat, left: panel });
+      g.box({ at: [-L / 2 - 1, -w / 2 - t - 1, h], size: [L + 2, w + 2 * t + 2, roof], r: 1.5, chamfer: 1, material: mat, top: (f) => f.hlines(4, 4, f.w - 8, f.h - 8, 5, "ln-faint") });
+      g.pane({ plane: "right", at: [L / 2, w / 2, h], w, h: h * 0.55, fill: "f-glass", line: "ln-faint", material: "glass", draw: strips });
+      g.pane({ id: id("led"), class: "tunnel-led", plane: "left", at: [L / 2 - 4, w / 2 + t, h - 2], w: 2, h: 2, r: 1, fill: "f-lit", line: null });
+    } else {
+      g.box({ at: [-w / 2 - t, -L / 2, 0], size: [t, L, h], material: mat });
+      g.box({ at: [w / 2, -L / 2, 0], size: [t, L, h], r: 0.6, material: mat, right: panel });
+      g.box({ at: [-w / 2 - t - 1, -L / 2 - 1, h], size: [w + 2 * t + 2, L + 2, roof], r: 1.5, chamfer: 1, material: mat, top: (f) => f.vlines(4, 4, f.w - 8, f.h - 8, 5, "ln-faint") });
+      g.pane({ plane: "left", at: [-w / 2, L / 2, h], w, h: h * 0.55, fill: "f-glass", line: "ln-faint", material: "glass", draw: strips });
+      g.pane({ id: id("led"), class: "tunnel-led", plane: "right", at: [w / 2 + t, -L / 2 + 6, h - 2], w: 2, h: 2, r: 1, fill: "f-lit", line: null });
+    }
+  }, { flat: true });
+}
+
 // engine/src/prefabs/index.js
 function installPrefabs(define2, Iso2) {
   install(define2, Iso2);
   install2(define2, Iso2);
   install3(define2, Iso2);
+  install4(define2, Iso2);
 }
 
 // engine/src/diagram.js

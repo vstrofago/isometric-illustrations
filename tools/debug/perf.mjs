@@ -1,6 +1,6 @@
 /* Measure per-frame update cost of a scene page (manual clock). */
 import { chromium } from 'playwright';
-const file = process.argv[2] || 'examples/campus.html', from = +(process.argv[3] || 3);
+const file = process.argv[2] || 'examples/packing-line.html', from = +(process.argv[3] || 3);
 const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1200, height: 900 } });
 await p.addInitScript(() => { window.__ISO_MANUAL__ = true; });
 const t0 = Date.now();

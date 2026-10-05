@@ -14,7 +14,7 @@ export class Node {
     this.opts = { ...opts };
     this.id = opts.id || null;
     this.parent = null;
-    this.t = { x: 0, y: 0, z: 0, scale: 1, opacity: 1 };
+    this.t = { x: 0, y: 0, z: 0, scale: 1, opacity: opts.opacity ?? 1 };
     this.a = { x: 0, y: 0, z: 0, scale: 1, opacity: 1 };
     this.el = null;
     this.handlers = null;
@@ -59,12 +59,12 @@ export class Node {
   set(key, value) {
     if (typeof key === 'object') { for (const k in key) this.set(k, key[k]); return this; }
     if (TRANSFORM_KEYS.includes(key)) {
-      if (this.t[key] !== value) { this.t[key] = value; this.moved = true; this._wake(); }
+      if (this.t[key] !== value) { this.t[key] = value; if (key === 'opacity') this.fade = true; else this.moved = true; this._wake(); }
     } else if (this.opts[key] !== value) {
       this.opts[key] = value;
-      if (key === 'material' || key === 'class' || key === 'color' || key === 'style' || key === 'pressed' || key === 'label' || key === 'interactive' || key === 'glow') this.restyle = true;
-      else this.dirty = true;
       if (key === 'hidden') { this.hidden = !!value; this.restyle = true; }
+      else if (key === 'material' || key === 'class' || key === 'color' || key === 'style' || key === 'pressed' || key === 'label' || key === 'interactive' || key === 'glow') this.restyle = true;
+      else this.dirty = true;
       this._wake();
     }
     return this;

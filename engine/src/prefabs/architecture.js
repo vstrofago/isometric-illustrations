@@ -50,17 +50,43 @@ export default function install(define, Iso) {
   });
 
   /* Conveyor belt along x (or y). The belt surface is at z = h. track() → world Path along the belt. */
+  /* Conveyor belt along x (or y). Belt surface at z = h. Tall belts (h > 10) stand on legs with side
+     rails; the parts sort individually so boxes ride between the rails. track() → world path. */
   define('conveyor', (g, o) => {
     const L = o.length ?? 120, w = o.w ?? 18, h = o.h ?? 8, axis = o.axis || 'x', rollers = o.rollers ?? Math.round(L / 8);
-    const size = axis === 'x' ? [L, w, h] : [w, L, h];
-    g.box({ at: [-size[0] / 2, -size[1] / 2, 0], size, r: 1.5, chamfer: 0.8, material: o.material,
-      top: (f) => {
-        if (axis === 'x') for (let i = 0; i <= rollers; i++) { const u = 3 + (i * (L - 6)) / rollers; f.line(u, 2.5, u, w - 2.5, 'ln-faint'); }
-        else for (let i = 0; i <= rollers; i++) { const v = 3 + (i * (L - 6)) / rollers; f.line(2.5, v, w - 2.5, v, 'ln-faint'); }
-        if (axis === 'x') { f.line(0, 2.2, L, 2.2, 'ln-soft'); f.line(0, w - 2.2, L, w - 2.2, 'ln-soft'); }
-        else { f.line(2.2, 0, 2.2, L, 'ln-soft'); f.line(w - 2.2, 0, w - 2.2, L, 'ln-soft'); }
-      },
-      left: (f) => f.hlines(4, f.h * 0.5, f.w - 8, 0, 1, 'ln-faint') });
+    const legs = o.legs ?? h > 10, rails = o.rails ?? legs;
+    const X = (a, b) => (axis === 'x' ? a : b); // pick by axis
+    const rollerFace = (f) => {
+      if (axis === 'x') for (let i = 0; i <= rollers; i++) { const u = 3 + (i * (L - 6)) / rollers; f.line(u, 2.5, u, w - 2.5, 'ln-faint'); }
+      else for (let i = 0; i <= rollers; i++) { const v = 3 + (i * (L - 6)) / rollers; f.line(2.5, v, w - 2.5, v, 'ln-faint'); }
+      if (axis === 'x') { f.line(0, 2.2, L, 2.2, 'ln-soft'); f.line(0, w - 2.2, L, w - 2.2, 'ln-soft'); }
+      else { f.line(2.2, 0, 2.2, L, 'ln-soft'); f.line(w - 2.2, 0, w - 2.2, L, 'ln-soft'); }
+    };
+    if (!legs) {
+      const size = X([L, w, h], [w, L, h]);
+      g.box({ at: [-size[0] / 2, -size[1] / 2, 0], size, r: 1.5, chamfer: 0.8, material: o.material, top: rollerFace,
+        left: (f) => f.hlines(4, f.h * 0.5, f.w - 8, 0, 1, 'ln-faint') });
+    } else {
+      const t = o.belt ?? 4, z0 = h - t, n = Math.max(2, Math.round(L / (o.legSpacing ?? 34)) + 1), p = 2;
+      for (let i = 0; i < n; i++) {
+        const s = -L / 2 + 3 + (i * (L - 6 - p)) / (n - 1);
+        for (const side of [-1, 1]) {
+          const q = side < 0 ? -w / 2 + 1 : w / 2 - 1 - p;
+          g.box({ at: X([s, q, 0], [q, s, 0]), size: [p, p, z0], material: o.material });
+        }
+      }
+      const size = X([L, w, t], [w, L, t]);
+      g.box({ at: [-size[0] / 2, -size[1] / 2, z0], size, r: 1, chamfer: 0.5, material: o.material, top: rollerFace,
+        left: axis === 'x' ? (f) => f.hlines(3, t / 2, f.w - 6, 0, 1, 'ln-faint') : undefined,
+        right: axis === 'y' ? (f) => f.hlines(3, t / 2, f.w - 6, 0, 1, 'ln-faint') : undefined });
+      if (rails) {
+        const rh = o.railH ?? 2.6, rt = 1.2;
+        for (const side of [-1, 1]) {
+          const q = side < 0 ? -w / 2 : w / 2 - rt;
+          g.box({ class: 'rail', at: X([-L / 2, q, h], [q, -L / 2, h]), size: X([L, rt, rh], [rt, L, rh]), r: 0.4, material: o.material });
+        }
+      }
+    }
     return {
       track(lift = 0) {
         const at = this.opts.at || [0, 0, 0];
@@ -69,7 +95,7 @@ export default function install(define, Iso) {
         return Iso.path.line(a, b);
       },
     };
-  });
+  }, { flat: true });
 
   /* Layered stack (architecture "layer cake"). layers: [{label, material, color}] bottom → top */
   define('stack', (g, o) => {

@@ -29,3 +29,29 @@ for (const [name, target] of pages) {
     assert.ok(existsSync(png));
   });
 }
+
+/* Regression: after the entrance settles, boxes riding a belt must draw after the belt (and the belt's
+   legs), even though both were moving during the entrance. */
+test('travelling boxes stay on top of the belt after the entrance', { skip: !available && 'playwright not installed', timeout: 60000 }, async () => {
+  const { chromium } = await import('playwright');
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await page.addInitScript(() => { window.__ISO_MANUAL__ = true; });
+    await page.goto(pathToFileURL(join(root, 'examples/packing-line.html')).href);
+    await page.waitForFunction(() => window.Iso && Iso.scenes()[0] && Iso.scenes()[0].built);
+    const bad = await page.evaluate(() => {
+      const s = Iso.scenes()[0];
+      for (let i = 0; i < 6 * 60; i++) Iso.advance(1 / 60);
+      const order = Array.from(s.rootEl.children);
+      const belt = s.get('belt-b').children.find((c) => c.opts.top);
+      const by = belt.sortBox();
+      return s.all((n) => n.prefab === 'parcel' && /^box-/.test(n.id || '')).filter((p) => {
+        const b = p.sortBox();
+        const onBelt = b[1] >= by[1] - 1 && b[4] <= by[4] + 1 && Math.abs(b[2] - by[5]) < 0.5;
+        return onBelt && order.indexOf(p.el) < order.indexOf(belt.el);
+      }).map((p) => p.id);
+    });
+    assert.deepEqual(bad, []);
+  } finally { await browser.close(); }
+});

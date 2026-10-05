@@ -46,9 +46,24 @@ List them at runtime: `Object.keys(Iso.prefabs)`. Add your own with `Iso.define`
 | `building` | `w` 40, `d` 32, `h` 60, `floors`, `windows:'grid'\|'bands'`, `lit` (fraction of lit windows), `seed`, `door`, `roof` (false = none), `antenna` | Window grids on both visible faces. |
 | `tower` | `r` 14, `h` 50, `bands`, `ribs`, `cap` | Round building / silo. |
 | `gate` | `w` 40, `h` 46, `t` 4, `axis:'x'\|'y'` | Two posts, a beam and a glass pane. `axis:'y'` spans along y (pane faces +x). |
-| `conveyor` | `length` 120, `w` 18, `h` 8, `axis:'x'\|'y'`, `rollers` | API: `track(lift)` → a world path along the belt for `travel`. |
+| `conveyor` | `length` 120, `w` 18, `h` 8, `axis:'x'\|'y'`, `rollers`, `legs` (default when `h > 10`), `rails`, `belt`, `legSpacing` | Flat group: tall belts stand on legs with side rails, so boxes ride between the rails and sort correctly. API: `track(lift)` → a world path along the belt for `travel`. |
 | `stack` | `layers:[{label, icon, material, color, glow}]` (bottom → top), `size:[w,d]`, `t` 6, `gap` 14, `labels:'callout'\|'face'`, `labelSide` | Layer boxes get class `layer` and ids `<id>-<i>`. |
 | `block` | `size:[w,d,h]` (36×36×12), `icon` (name or SVG path), `iconSize`, `label` (front face), `labelSize`, `r`, `chamfer` | The diagram node. Icons: see below. |
+
+## Logistics
+
+| Prefab | Options | Notes |
+|---|---|---|
+| `parcel` | `size:[w,d,h]` (16×13×11), `open` (flaps up, dark mouth), `label` (printed sticker on the front), `labelLit`, `material` ('paper'), `flapAngle` | API: `open(bool)`, `label(bool)` — switch state cheaply while it travels. |
+| `pallet` | `size:[w,d]` (30×26), `load:[cols, rows, layers]`, `boxH`, `partial` (fraction missing on top), `seed` | Wooden pallet, optionally stacked with taped parcels. |
+| `rack` | `size:[w,d]` (70×24), `h` 54, `levels` 3, `fill` 0.7, `seed` | Uprights, shelves and parcels (seeded). |
+| `forklift` | `lift` (fork height), `load` | Faces +x. Drive it with `travel(…, { yoyo: true, ease: Iso.ease.inOutSine })` — it reverses without turning. |
+| `truck` | `length` 90, `w` 40, `h` 44, `floor` 12, `open` (true), `text` | Box truck whose open rear faces +x: point a conveyor at it and fade boxes out at the door. |
+| `scanner` | `axis` (belt direction), `w` 30 (clear width), `h` 38, `beamFrom` (belt height), `beamOpacity`, `glow` | Flat group: posts, housing and a lit beam (id `<id>-beam`, class `scan-beam`) that boxes pass through. |
+| `tunnel` | `axis`, `length` 30, `w` 30, `h` 36, `roof` 7 | Flat group: a machine hood over a belt with a strip curtain at the exit and a status light (id `<id>-led`). |
+
+See `examples/packing-line.html` for all of them working together: boxes change from open to taped to
+labelled as they pass the stations, computed from their position along the path.
 
 ## Builders
 

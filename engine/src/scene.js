@@ -2,7 +2,7 @@
 import { makeView, fmt, box3 } from './math.js';
 import { IDENTITY } from './draw.js';
 import { Node, Group } from './node.js';
-import { makeItem, compareItems, depthSort, Placer } from './sort.js';
+import { makeItem, compareItems, depthSort, hexOverlap, Placer } from './sort.js';
 import { injectCSS } from './style.js';
 import { Timeline } from './anim.js';
 
@@ -248,8 +248,14 @@ export class Scene {
   _touch(n) { this.pending.add(n); clock.kick(); }
 
   update(dt = 0, seeking = false) {
+    this._frame = (this._frame || 0) + 1;
     /* reset additive channels */
-    for (const n of this.touchedA) { const a = n.a; a.x = a.y = a.z = 0; a.scale = a.opacity = 1; n.moved = true; this.pending.add(n); }
+    for (const n of this.touchedA) {
+      const a = n.a;
+      if (a.x || a.y || a.z || a.scale !== 1) n.moved = true;
+      if (a.opacity !== 1) n.fade = true;
+      a.x = a.y = a.z = 0; a.scale = a.opacity = 1; this.pending.add(n);
+    }
     this.touchedA.clear();
     for (const tl of this.timelines.slice()) {
       tl.apply(this.time);
@@ -261,11 +267,12 @@ export class Scene {
       el.style.strokeDashoffset = fmt(-sp * this.time);
     }
     this.sync();
+    this._settle();
   }
   /* additive offset helper for behaviours */
   nudge(node, key, value) {
     if (key === 'scale' || key === 'opacity') node.a[key] *= value; else node.a[key] += value;
-    node.moved = true;
+    if (key === 'opacity') node.fade = true; else node.moved = true;
     this.touchedA.add(node);
     this.pending.add(node);
   }
@@ -292,11 +299,11 @@ export class Scene {
     }
     for (const n of nodes) {
       if (n.isGroup && n.flat) {
-        if (n.moved || n.restyle) for (const it of n.items()) { it.sync(v); place.add(it); }
-        n.moved = false; n.restyle = false;
+        if (n.moved || n.restyle || n.fade) for (const it of n.items()) { it.sync(v); if (n.moved || n.restyle) place.add(it); }
+        n.moved = false; n.restyle = false; n.fade = false;
         continue;
       }
-      if (n.moved || n.restyle) { n.sync(v); if (n.moved) place.add(n); n.moved = false; }
+      if (n.moved || n.restyle || n.fade) { n.sync(v); if (n.moved) place.add(n); n.moved = false; n.fade = false; }
     }
     /* propagate bound changes to atomic ancestors and place */
     const containers = new Map();
@@ -331,12 +338,12 @@ export class Scene {
     let st = this._containers.get(container);
     const zs = this.view.ZS;
     if (!st || st.stale) {
-      st = { dyn: new Set(), slotOf: new Map(), bySlot: new Map(), placer: null, statics: null, stale: false, parent: container === this.root ? this.rootEl : container.el };
+      st = { dyn: new Set(), last: new Map(), slotOf: new Map(), bySlot: new Map(), placer: null, statics: null, stale: false, lastResort: this._frame || 0, parent: container === this.root ? this.rootEl : container.el };
       this._containers.set(container, st);
     }
     if (!st.parent) return;
     let rebuild = !st.placer;
-    for (const m of movers) if (!st.dyn.has(m)) { st.dyn.add(m); rebuild = true; }
+    for (const m of movers) { if (!st.dyn.has(m)) { st.dyn.add(m); rebuild = true; } st.last.set(m, this._frame || 0); }
     const touched = new Set();
     const assign = (d) => {
       if (!d.el || d.el.parentNode !== st.parent) return;
@@ -355,6 +362,26 @@ export class Scene {
       st.slotOf.clear(); st.bySlot.clear();
       for (const d of st.dyn) assign(d);
     } else for (const m of movers) assign(m);
+    /* moving items that overlap each other must also respect each other */
+    if (st.dyn.size > 1 && st.dyn.size <= 160) {
+      const list = [];
+      for (const d of st.dyn) if (st.slotOf.has(d)) list.push({ d, it: makeItem(d, d.sortBox(), zs, d.order) });
+      const move = (d, slot) => {
+        const old = st.slotOf.get(d); const a = st.bySlot.get(old); if (a) a.delete(d);
+        st.slotOf.set(d, slot); let b = st.bySlot.get(slot); if (!b) st.bySlot.set(slot, (b = new Set()));
+        b.add(d); touched.add(old); touched.add(slot);
+      };
+      for (let pass = 0; pass < 3; pass++) {
+        let changed = false;
+        for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+          const A = list[i], B = list[j];
+          if (!A.it.hex || !B.it.hex || !hexOverlap(A.it.hex, B.it.hex)) continue;
+          const c = compareItems(A.it, B.it), sa = st.slotOf.get(A.d), sb = st.slotOf.get(B.d);
+          if (c < 0 && sa > sb) { move(B.d, sa); changed = true; } else if (c > 0 && sb > sa) { move(A.d, sb); changed = true; }
+        }
+        if (!changed) break;
+      }
+    }
     for (const slot of touched) {
       const set = st.bySlot.get(slot);
       if (!set || !set.size) continue;
@@ -370,6 +397,29 @@ export class Scene {
         next = el;
       }
     }
+  }
+
+  /* Items that stopped moving go back into the static order: one full depth sort of the container. */
+  _settle() {
+    if (!this._containers) return;
+    const f = this._frame;
+    for (const [c, st] of this._containers) {
+      if (!st.dyn.size || st.stale || f - st.lastResort < 30) continue;
+      let settled = 0;
+      for (const d of st.dyn) if (f - (st.last.get(d) ?? 0) > 20) settled++;
+      if (settled && (settled >= Math.max(8, st.dyn.size * 0.2) || st.dyn.size > 160)) this._resort(c, st);
+    }
+  }
+  _resort(container, st) {
+    const zs = this.view.ZS, f = this._frame;
+    const nodes = (container.sorted || []).filter((n) => n.el && n.el.parentNode === st.parent);
+    const ordered = depthSort(nodes.map((n) => makeItem(n, n.sortBox(), zs, n.order))).map((it) => it.node);
+    container.sorted = ordered;
+    let cursor = st.parent.firstElementChild;
+    for (const n of ordered) { if (n.el === cursor) cursor = cursor.nextElementSibling; else st.parent.insertBefore(n.el, cursor); }
+    for (const d of Array.from(st.dyn)) if (f - (st.last.get(d) ?? 0) > 20) { st.dyn.delete(d); st.last.delete(d); }
+    st.placer = null; st.slotOf.clear(); st.bySlot.clear(); st.lastResort = f;
+    if (st.dyn.size) this._place(container, new Set());
   }
 
   /* ── utilities ── */

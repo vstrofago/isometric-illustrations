@@ -73,7 +73,7 @@ Iso.scene('#app', {
 
 ## Nodes
 
-Every object accepts: `id`, `class` (space-separated; used by `'.class'` targets), `material`,
+Every object accepts: `id`, `class` (space-separated; used by `'.class'` targets), `opacity` (initial), `material`,
 `color` (tint), `glow`, `layer` (lower draws first when overlapping; labels use 1), `hidden`, `style`
 (CSS custom properties object), `anchor` (`'bottom'|'center'|'top'` for scale), and for interaction
 `interactive`, `label` (aria-label), `role`, `pressed`.

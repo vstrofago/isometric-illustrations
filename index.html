@@ -50,12 +50,12 @@
     <p class="lede">An SVG engine for isometric figures, dioramas and diagrams — with depth sorting, a timeline, travelling objects, interaction and frame-exact export — and a skill that teaches any agent to use it well.</p>
     <nav>
       <a class="primary" href="playground/">Open the playground</a>
-      <a href="examples/campus.html">Campus</a>
+      <a href="examples/packing-line.html">Packing line</a>
       <a href="examples/desk-computer.html">Desk computer</a>
       <a href="examples/architecture.html">Architecture</a>
       <a href="skills/isometric-illustrations/SKILL.md">The skill</a>
     </nav>
-    <div class="hero"><a href="examples/campus.html"><img src="docs/img/campus.png" alt="Isometric diorama of a ring campus with a wooded courtyard"></a></div>
+    <div class="hero"><a href="examples/packing-line.html"><img src="docs/img/packing-line.png" alt="Isometric diorama of a packing line: boxes on an L-shaped conveyor between a box former, a taping tunnel, a scanner and a truck"></a></div>
   </div>
 </header>
 
@@ -65,7 +65,7 @@
     <p class="sub">Every figure below is a single HTML file. Open one, read its source, change a number.</p>
     <div class="grid">
       <a class="card" href="examples/desk-computer.html"><img src="docs/img/desk-computer.png" alt="Desk computer, switched on"><div><p class="eyebrow">Fig 2 · object · interactive</p><h3>Desk computer</h3><p>Click to switch it on — a CRT line opens into the screen. Type on your keyboard.</p></div></a>
-      <a class="card" href="examples/campus.html"><img src="docs/img/campus.png" alt="Ring campus diorama"><div><p class="eyebrow">Fig 3 · diorama · animated</p><h3>Ring campus</h3><p>1,400 objects assemble back to front; lit cards ride the roof and phones rise to meet them.</p></div></a>
+      <a class="card" href="examples/packing-line.html"><img src="docs/img/packing-line.png" alt="Packing line diorama"><div><p class="eyebrow">Fig 3 · diorama · animated</p><h3>Packing line</h3><p>Boxes leave the former open, get taped in the tunnel, labelled at the scanner and roll into the truck.</p></div></a>
       <a class="card" href="examples/architecture.html"><img src="docs/img/architecture.png" alt="Service architecture diagram"><div><p class="eyebrow">Fig 4 · diagram · data-driven</p><h3>Service architecture</h3><p>Nodes on a grid, routed edges, packets in flight. Hover a service.</p></div></a>
       <a class="card" href="examples/server-room.html"><img src="docs/img/server-room.png" alt="Server room"><div><p class="eyebrow">Fig 5 · JSON spec</p><h3>Server room</h3><p>The whole figure is a JSON document rendered with <code>Iso.render()</code>.</p></div></a>
       <a class="card" href="examples/hello.html"><img src="docs/img/hello.png" alt="A laptop and a lit card"><div><p class="eyebrow">Fig 1 · template</p><h3>Hello</h3><p>The smallest useful figure: a platform, an object, one lit moment, one motion.</p></div></a>
@@ -97,7 +97,7 @@ s.assemble();
         <li><b>Primitives</b> — rounded boxes with chamfers, prisms, cylinders, cones, tubes, spheres, panels, hulls, text on planes, connectors, ribbons.</li>
         <li><b>Depth</b> — topological sorting by separating axes; moving objects re-sort every frame.</li>
         <li><b>Motion</b> — timelines, tweens, paths, float, travel, orbit, pulse, blink, spin, assemble, draw-on, typewriter.</li>
-        <li><b>Prefabs</b> — 28 objects: devices, scenery, buildings, diagram blocks, a CRT desk computer.</li>
+        <li><b>Prefabs</b> — 35 objects: devices, scenery, logistics (boxes, pallets, racks, a forklift, a truck), buildings, diagram blocks, a CRT desk computer.</li>
         <li><b>Themes</b> — dark, light, paper, blueprint, terminal; materials lit, glass, screen, ghost, tint.</li>
         <li><b>Export</b> — SVG, PNG, MP4, GIF, WebM, self-contained HTML; deterministic frames.</li>
       </ul>

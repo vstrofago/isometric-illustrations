@@ -49,6 +49,29 @@ s.loop((t) => {
 });
 ```
 
+## Objects that change at stations
+
+Derive each traveller's position along the path from time, then switch its state when it passes a
+station. State switches are cheap (`hidden` toggles inside the prefab), so do it every frame:
+
+```js
+const line = Iso.path.polyline([[150, -128, 16], [150, 81, 16], [-148, 81, 16]], { radius: 11 });
+const N = 11, LAP = line.length / 21;                       // 21 units per second
+const boxes = Array.from({ length: N }, (_, i) => s.parcel({ id: 'box-' + i, at: [150, -128, 16], open: true }));
+s.travel(boxes, line, { duration: LAP, orient: true });       // travel spreads them by 1/N
+const uAt = (pred) => { for (let u = 0; u <= 1; u += 0.0005) if (pred(line.at(u))) return u; return 1; };
+const uTape = uAt((p) => p[1] >= -60), uScan = uAt((p) => p[0] <= -70);
+s.loop((t) => boxes.forEach((b, i) => {
+  const u = (((t / LAP + i / N) % 1) + 1) % 1, at = u * line.length;
+  b.open(u < uTape);                                          // taped after the tunnel
+  b.label(u > uScan);                                         // labelled after the scanner
+  s.nudge(b, 'opacity', Math.max(0, Math.min(1, at / 10, (line.length - at) / 12)));   // emerge and vanish
+}));
+```
+
+Use `s.nudge(node, 'opacity', k)` (multiplicative, per frame) rather than `set('opacity')` inside loops
+so entrance fades from timelines still apply.
+
 ## Scripted sequences (explainers)
 
 ```js

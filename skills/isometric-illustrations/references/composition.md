@@ -32,7 +32,7 @@ Sketch the plan view first (looking down): x to the right, y downward on your sk
 | Server rack | 28×34×64 |
 | Building | 30–60 footprint, 10 per floor |
 
-Mixing scales is fine in a diorama (oversized devices on a campus read as "the subject"), but keep
+Mixing scales is fine in a diorama (oversized boxes on a factory floor read as "the subject"), but keep
 each category consistent.
 
 ## Layering a diorama
