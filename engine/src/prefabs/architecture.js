@@ -1,6 +1,7 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Architecture & diagram prefabs: building, tower, gate, conveyor, stack, block. */
-import { rng, fmt } from '../math.js';
-import { ICONS } from './icons.js';
+import { rng, fmt, cssClass } from '../math.js';
+import { iconPath } from './icons.js';
 
 export default function install(define, Iso) {
   /* Building with a window grid on both visible faces. lit: fraction of lit windows (seeded). */
@@ -104,7 +105,7 @@ export default function install(define, Iso) {
       const z = i * (t + gap);
       g.box({
         id: o.id ? o.id + '-' + i : undefined, class: 'layer', at: [-w / 2, -d / 2, z], size: [w, d, t], r: o.r ?? 6, chamfer: 1.2, material: L.material, color: L.color, glow: L.glow,
-        top: L.icon ? (f) => f.svg('<path class="ln-strong" d="' + (ICONS[L.icon] || L.icon) + '"/>', { u: w / 2 - 9, v: d / 2 - 9, transform: 'scale(.75)' }) : undefined,
+        top: L.icon ? (f) => f.svg('<path class="ln-strong" d="' + iconPath(L.icon) + '"/>', { u: w / 2 - 9, v: d / 2 - 9, transform: 'scale(.75)' }) : undefined,
         left: L.label && o.labels === 'face' ? (f) => f.text(L.label, 8, t / 2 + 2, { size: Math.min(5, t * 0.8), cls: 'tx tx-label', spacing: 0.8 }) : undefined,
       });
       if (L.label && o.labels !== 'face') {
@@ -125,7 +126,7 @@ export default function install(define, Iso) {
       at: [-w / 2, -d / 2, 0], size: [w, d, h], r: o.r ?? 5, chamfer: o.chamfer ?? 1.5, material: o.material, color: o.color, glow: o.glow,
       top: o.icon ? (f) => {
         const s = (o.iconSize ?? Math.min(w, d) * 0.5) / 24;
-        f.svg('<path class="' + (o.material === 'lit' ? 'ln-strong' : o.iconClass || 'ln-strong') + '" d="' + (ICONS[o.icon] || o.icon) + '"/>', { u: (f.w - 24 * s) / 2, v: (f.h - 24 * s) / 2, transform: 'scale(' + fmt(s) + ')' });
+        f.svg('<path class="' + cssClass(o.material === 'lit' ? 'ln-strong' : o.iconClass || 'ln-strong') + '" d="' + iconPath(o.icon) + '"/>', { u: (f.w - 24 * s) / 2, v: (f.h - 24 * s) / 2, transform: 'scale(' + fmt(s) + ')' });
       } : undefined,
       left: o.label ? (f) => {
         const size = o.labelSize || Math.min(5.5, h * 0.42, (f.w - 6) / (String(o.label).length * 0.72));

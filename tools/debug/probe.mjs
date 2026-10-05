@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Evaluate an expression in a scene page at time t: node tools/debug/probe.mjs page.html 5.7 "s.get('phone-0').t" */
 import { chromium } from 'playwright';
 const [file, t, expr] = process.argv.slice(2);

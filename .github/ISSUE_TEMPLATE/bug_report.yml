@@ -1,0 +1,42 @@
+name: Bug report
+description: Something renders wrong, throws, or animates incorrectly.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting. A small scene that shows the problem helps more than anything else.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you expected and what you saw instead. A render (PNG or GIF) is very welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal scene
+      description: The smallest JS or JSON scene that reproduces it.
+      render: js
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Iso version
+      placeholder: "0.1.0 (from the banner at the top of dist/iso.js)"
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Browser and OS
+      placeholder: Chrome 140 on macOS 15
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues.
+          required: true
+        - label: I read references/troubleshooting.md (depth sorting, placement, hidden arrows).

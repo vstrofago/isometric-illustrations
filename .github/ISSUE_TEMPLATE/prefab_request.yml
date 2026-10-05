@@ -1,0 +1,23 @@
+name: Prefab request
+description: Ask for a new object for the library.
+labels: [prefab]
+body:
+  - type: input
+    id: object
+    attributes:
+      label: Object
+      placeholder: e.g. a 3D printer, a wind turbine, a kanban board
+    validations:
+      required: true
+  - type: textarea
+    id: use
+    attributes:
+      label: Where you would use it
+      description: The kind of figure (object, diorama, diagram) and what it should do (states, motion).
+    validations:
+      required: true
+  - type: textarea
+    id: refs
+    attributes:
+      label: References
+      description: Photos or drawings for proportions and details. Only share images you are allowed to share.

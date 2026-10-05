@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Bundle the engine: dist/iso.js (global `Iso`), dist/iso.min.js, dist/iso.esm.js,
    and a copy inside the skill so the skill folder is self-contained. */
 import * as esbuild from 'esbuild';
@@ -7,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const watch = process.argv.includes('--watch');
-const banner = { js: `/*! Iso ${JSON.parse(readFileSync(join(root, 'package.json'))).version} — isometric illustration engine · MIT */` };
+const banner = { js: `/*! Iso ${JSON.parse(readFileSync(join(root, 'package.json'))).version} — isometric illustration engine · Apache-2.0 · github.com/vstrofago/isometric-illustrations */` };
 const common = { bundle: true, target: ['es2020'], logLevel: 'warning', banner };
 
 const builds = [

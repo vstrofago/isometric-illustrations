@@ -1,4 +1,4 @@
-/*! Iso 0.1.0 — isometric illustration engine · MIT */
+/*! Iso 0.1.0 — isometric illustration engine · Apache-2.0 · github.com/vstrofago/isometric-illustrations */
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -13,16 +13,24 @@ __export(math_exports, {
   box3: () => box3,
   circlePts: () => circlePts,
   clamp: () => clamp,
+  cssClass: () => cssClass,
+  cssValue: () => cssValue,
+  dashArray: () => dashArray,
+  escAttr: () => escAttr,
   fmt: () => fmt,
+  fontWeight: () => fontWeight,
   insetConvex: () => insetConvex,
   isConvex: () => isConvex,
   lerp: () => lerp,
   makeView: () => makeView,
+  num: () => num,
+  pathData: () => pathData,
   regularPolygon: () => regularPolygon,
   rng: () => rng,
   rotatePts: () => rotatePts,
   rrect: () => rrect,
   signedArea: () => signedArea,
+  textAnchor: () => textAnchor,
   v3: () => v3
 });
 var DEG = Math.PI / 180;
@@ -33,6 +41,17 @@ var fmt = (n) => {
   const v = Math.round(n * 100) / 100;
   return Object.is(v, -0) ? "0" : String(v);
 };
+var escAttr = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+var cssClass = (s) => String(s ?? "").replace(/[^\w\- ]/g, "");
+var cssValue = (s) => String(s ?? "").replace(/[;"'<>{}\\]/g, "");
+var num = (v) => {
+  const n = parseFloat(v);
+  return Number.isFinite(n) ? fmt(n) : "";
+};
+var dashArray = (s) => String(s ?? "").replace(/[^0-9.,\s]/g, "").trim();
+var pathData = (s) => /^[MmLlHhVvCcSsQqTtAaZzEe0-9.,\s+-]*$/.test(String(s ?? "")) ? String(s ?? "") : "";
+var textAnchor = (a) => a === "middle" || a === "end" ? a : "start";
+var fontWeight = (w) => /^(normal|bold|[1-9]00)$/.test(String(w)) ? String(w) : "";
 function makeView(angle = 30) {
   const C = Math.cos(angle * DEG);
   const S = Math.sin(angle * DEG);
@@ -311,13 +330,13 @@ var Draw = class {
         continue;
       }
       if (o.k === "f") {
-        s += '<path class="' + o.cls + '" d="' + o.d + '"' + (o.extra || "") + "/>";
+        s += '<path class="' + cssClass(o.cls) + '" d="' + o.d + '"' + (o.extra || "") + "/>";
         i++;
         continue;
       }
       let d = o.d, j = i + 1;
       while (j < ops.length && ops[j].k === "l" && ops[j].cls === o.cls && ops[j].extra === o.extra) d += ops[j++].d;
-      s += '<path class="' + o.cls + '" d="' + d + '"' + (o.extra || "") + "/>";
+      s += '<path class="' + cssClass(o.cls) + '" d="' + d + '"' + (o.extra || "") + "/>";
       i = j;
     }
     return s;
@@ -613,9 +632,9 @@ var Node = class {
   /* ── rendering ── */
   classes() {
     const o = this.opts, c = ["iso-n"];
-    if (o.material) c.push("m-" + o.material);
+    if (o.material) c.push("m-" + cssClass(o.material));
     if (o.color) c.push("m-tint");
-    if (o.class) c.push(o.class);
+    if (o.class) c.push(cssClass(o.class));
     if (o.glow) c.push("glow");
     if (this.interactive()) c.push("hit");
     return c.join(" ");
@@ -625,8 +644,10 @@ var Node = class {
   }
   styleAttr() {
     const o = this.opts, s = [];
-    if (o.color) s.push("--iso-tint:" + o.color);
-    if (o.style) for (const k in o.style) s.push(k + ":" + o.style[k]);
+    if (o.color) s.push("--iso-tint:" + cssValue(o.color));
+    if (o.style) {
+      for (const k in o.style) if (/^-{0,2}[a-z][\w-]*$/i.test(k)) s.push(k + ":" + cssValue(o.style[k]));
+    }
     const op = this.opacity();
     if (op !== 1) s.push("opacity:" + fmt(op));
     if (this.hidden) s.push("display:none");
@@ -657,7 +678,7 @@ var Node = class {
     s += this.styleAttr();
     if (this.interactive()) {
       const o = this.opts;
-      s += ' tabindex="0" role="' + (o.role || "button") + '"';
+      s += ' tabindex="0" role="' + esc(o.role || "button") + '"';
       if (o.label) s += ' aria-label="' + esc(o.label) + '"';
       if (o.pressed !== void 0) s += ' aria-pressed="' + !!o.pressed + '"';
     }
@@ -692,8 +713,10 @@ var Node = class {
     if (this.restyle) {
       this.el.setAttribute("class", this.classes());
       this.el.style.display = this.hidden ? "none" : "";
-      if (this.opts.color) this.el.style.setProperty("--iso-tint", this.opts.color);
-      if (this.opts.style) for (const k in this.opts.style) this.el.style.setProperty(k, this.opts.style[k]);
+      if (this.opts.color) this.el.style.setProperty("--iso-tint", cssValue(this.opts.color));
+      if (this.opts.style) {
+        for (const k in this.opts.style) if (/^-{0,2}[a-z][\w-]*$/i.test(k)) this.el.style.setProperty(k, cssValue(this.opts.style[k]));
+      }
       if (this.opts.pressed !== void 0) this.el.setAttribute("aria-pressed", !!this.opts.pressed);
       if (this.opts.label) this.el.setAttribute("aria-label", this.opts.label);
       if (this.interactive() && !this.el.hasAttribute("tabindex")) {
@@ -871,7 +894,7 @@ var Face = class _Face {
     const d = this.d, path2 = d.dw(pts.map((p) => this.pt(p[0], p[1])), close);
     const fill = opt.fill, line = opt.line === void 0 ? "ln-soft" : opt.line;
     if (fill) d.fill(path2, fill);
-    if (line) d.line(path2, line, opt.dash ? ' stroke-dasharray="' + opt.dash + '"' : void 0);
+    if (line) d.line(path2, line, opt.dash ? ' stroke-dasharray="' + dashArray(opt.dash) + '"' : void 0);
     return this;
   }
   rect(u, v, w, h, opt = {}) {
@@ -918,17 +941,17 @@ var Face = class _Face {
   }
   /* SVG text laid on the face */
   text(str, u, v, opt = {}) {
-    const size = opt.size || 8, anchor = opt.anchor || "start";
+    const size = opt.size || 8, anchor = textAnchor(opt.anchor);
     const m = this.d.planeMatrix(this.pt(u, v), this.U, this.V);
-    const ls = opt.spacing !== void 0 ? ' letter-spacing="' + opt.spacing + '"' : "";
-    const w = opt.weight ? ' font-weight="' + opt.weight + '"' : "";
-    this.d.raw('<text class="' + (opt.cls || "tx") + '" transform="' + m + '" font-size="' + fmt(size) + '" text-anchor="' + anchor + '"' + ls + w + (opt.attrs || "") + ">" + escText(str) + "</text>");
+    const ls = opt.spacing !== void 0 ? ' letter-spacing="' + num(opt.spacing) + '"' : "";
+    const w = fontWeight(opt.weight) ? ' font-weight="' + fontWeight(opt.weight) + '"' : "";
+    this.d.raw('<text class="' + cssClass(opt.cls || "tx") + '" transform="' + m + '" font-size="' + fmt(size) + '" text-anchor="' + anchor + '"' + ls + w + (opt.attrs || "") + ">" + escText(str) + "</text>");
     return this;
   }
   /* raw SVG content in face units, optional extra transform (e.g. 'translate(4 4) scale(2)') */
   svg(markup, opt = {}) {
     const m = this.d.planeMatrix(this.pt(opt.u || 0, opt.v || 0), this.U, this.V);
-    this.d.raw('<g transform="' + m + (opt.transform ? " " + opt.transform : "") + '"' + (opt.cls ? ' class="' + opt.cls + '"' : "") + ">" + markup + "</g>");
+    this.d.raw('<g transform="' + m + (opt.transform ? " " + opt.transform : "") + '"' + (opt.cls ? ' class="' + cssClass(opt.cls) + '"' : "") + ">" + markup + "</g>");
     return this;
   }
   /* sub-face offset by (u, v) */
@@ -1440,7 +1463,7 @@ var Flat = class extends Node {
   draw(d) {
     const o = this.opts, { x, y, z } = this.g();
     const fill = o.fill === void 0 ? null : o.fill, line = o.line === void 0 ? "ln-soft" : o.line;
-    const dash = o.dash ? ' stroke-dasharray="' + o.dash + '"' : void 0;
+    const dash = o.dash ? ' stroke-dasharray="' + dashArray(o.dash) + '"' : void 0;
     let path2;
     if (o.shape === "circle" || o.shape === "ring") {
       const [cx, cy, Z] = d.w(x, y, z);
@@ -1496,9 +1519,9 @@ var Line = class extends Node {
     if (pts.length < 2) return;
     const cls = o.line || o.cls || "ln";
     let extra = "";
-    if (o.dash) extra += ' stroke-dasharray="' + o.dash + '"';
-    if (o.flow) extra += ' data-flow="' + o.flow + '"';
-    if (o.width) extra += ' stroke-width="' + o.width + '"';
+    if (o.dash) extra += ' stroke-dasharray="' + dashArray(o.dash) + '"';
+    if (o.flow) extra += ' data-flow="' + num(o.flow) + '"';
+    if (o.width) extra += ' stroke-width="' + num(o.width) + '"';
     if (o.reveal !== void 0 && o.reveal < 1) extra += ' pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="' + fmt(1 - Math.max(0, o.reveal)) + '"';
     d.line(d.dw(pts, o.closed), cls, extra || void 0);
     if (o.reveal !== void 0 && o.reveal < 1) return;
@@ -1594,7 +1617,7 @@ var Ribbon = class extends Node {
       d.line(d.dl(L), o.line || "ln-soft");
       d.line(d.dl(R), o.line || "ln-soft");
     }
-    if (o.center) d.line(d.dl(this.pts()), "ln-soft", ' stroke-dasharray="' + (o.center === true ? "4 4" : o.center) + '"' + (o.flow ? ' data-flow="' + o.flow + '"' : ""));
+    if (o.center) d.line(d.dl(this.pts()), "ln-soft", ' stroke-dasharray="' + (o.center === true ? "4 4" : dashArray(o.center)) + '"' + (o.flow ? ' data-flow="' + num(o.flow) + '"' : ""));
   }
 };
 var Helix = class extends Node {
@@ -1649,10 +1672,10 @@ var Text = class extends Node {
   draw(d) {
     const o = this.opts, [x, y, z] = o.at || [0, 0, 0], size = o.size || 8;
     const pl = PLANES[o.plane || "screen"];
-    const cls = o.cls || (o.plane === "screen" || !o.plane ? "tx tx-label" : "tx");
-    const anchor = o.anchor || "start";
-    const ls = o.spacing !== void 0 ? ' letter-spacing="' + o.spacing + '"' : "";
-    const wt = o.weight ? ' font-weight="' + o.weight + '"' : "";
+    const cls = cssClass(o.cls || (o.plane === "screen" || !o.plane ? "tx tx-label" : "tx"));
+    const anchor = textAnchor(o.anchor);
+    const ls = o.spacing !== void 0 ? ' letter-spacing="' + num(o.spacing) + '"' : "";
+    const wt = fontWeight(o.weight) ? ' font-weight="' + fontWeight(o.weight) + '"' : "";
     let str = String(o.text ?? "");
     if (o.chars !== void 0) str = str.slice(0, Math.max(0, Math.round(o.chars)));
     const lines = str.split("\n");
@@ -2284,9 +2307,11 @@ var Scene = class {
     const label = o.label || o.title || "Isometric illustration";
     const css2 = [];
     if (o.height) css2.push("height:" + o.height + (typeof o.height === "number" ? "px" : ""), "width:100%");
-    if (o.colors) for (const k in o.colors) css2.push("--iso-" + k + ":" + o.colors[k]);
-    const svgOpen = '<svg xmlns="http://www.w3.org/2000/svg" class="iso iso-' + o.theme + (o.class ? " " + o.class : "") + '" viewBox="' + vb.map(fmt).join(" ") + '" role="img" aria-label="' + escAttr(label) + '"' + (css2.length ? ' style="' + escAttr(css2.join(";")) + '"' : "") + ' preserveAspectRatio="xMidYMid meet">';
-    const markup = svgOpen + (o.title ? "<title>" + escAttr(o.title) + "</title>" : "") + '<g class="iso-root">' + html + "</g></svg>";
+    if (o.colors) {
+      for (const k in o.colors) if (/^[\w-]+$/.test(k)) css2.push("--iso-" + k + ":" + cssValue(o.colors[k]));
+    }
+    const svgOpen = '<svg xmlns="http://www.w3.org/2000/svg" class="iso iso-' + cssClass(o.theme) + (o.class ? " " + cssClass(o.class) : "") + '" viewBox="' + vb.map(fmt).join(" ") + '" role="img" aria-label="' + escAttr2(label) + '"' + (css2.length ? ' style="' + escAttr2(css2.join(";")) + '"' : "") + ' preserveAspectRatio="xMidYMid meet">';
+    const markup = svgOpen + (o.title ? "<title>" + escAttr2(o.title) + "</title>" : "") + '<g class="iso-root">' + html + "</g></svg>";
     if (!this.host || typeof document === "undefined") {
       this._markup = markup;
       return markup;
@@ -2786,6 +2811,7 @@ var Scene = class {
     (this.listeners[evt] || []).forEach((f) => f(arg, this));
   }
   setTheme(theme) {
+    theme = cssClass(theme);
     const old = "iso-" + this.opts.theme, nu = "iso-" + theme;
     if (this.svg) {
       this.svg.classList.remove(old);
@@ -2812,7 +2838,7 @@ function containerOf(n) {
   while (p && p.flat) p = p.parent;
   return p;
 }
-function escAttr(s) {
+function escAttr2(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 }
 
@@ -2920,7 +2946,7 @@ function figure(host, o = {}) {
   injectCSS();
   host = typeof host === "string" ? document.querySelector(host) : host;
   const fig = document.createElement("figure");
-  fig.className = "iso-fig iso-" + (o.theme || "dark") + (o.class ? " " + o.class : "");
+  fig.className = "iso-fig iso-" + cssClass(o.theme || "dark") + (o.class ? " " + cssClass(o.class) : "");
   const cap = (pos, text, live) => {
     const p = document.createElement("p");
     p.className = "iso-cap iso-cap-" + pos;
@@ -3120,9 +3146,11 @@ var ICONS = {
   flow: "M5 6.5a2.5 2.5 0 1 0 0-.01M19 17.5a2.5 2.5 0 1 0 0-.01M7.5 6.5H13a3 3 0 0 1 3 3v5a3 3 0 0 0 3 3"
 };
 var MARK = "M3 3h3v3H3zM4 2h1v1H4zM6 4h1v1H6zM4 6h1v1H4zM2 4h1v1H2zM4 1h1v1H4zM7 4h1v1H7zM4 7h1v1H4zM1 4h1v1H1zM4 0h1v1H4zM8 4h1v1H8zM4 8h1v1H4zM0 4h1v1H0zM2 2h1v1H2zM6 2h1v1H6zM6 6h1v1H6zM2 6h1v1H2z";
+function iconPath(name) {
+  return ICONS[name] || pathData(name);
+}
 function icon(name, cls = "ln-strong") {
-  const d = ICONS[name] || name;
-  return '<path class="' + cls + '" d="' + d + '"/>';
+  return '<path class="' + cssClass(cls) + '" d="' + iconPath(name) + '"/>';
 }
 
 // engine/src/prefabs/devices.js
@@ -3460,9 +3488,9 @@ function drawCRT(f, n) {
   s += '<rect x="0" y="0" width="' + w + '" height="' + h + '" fill="url(#' + id + 'g)"/>';
   if (openP > 0.4) {
     const a = Math.min(1, (openP - 0.4) / 0.6);
-    const logo = o.logo || MARK, logoIsPath = /^M/.test(logo);
+    const logo = o.logo && pathData(o.logo) || MARK;
     s += '<g style="opacity:' + fmt(a) + '">';
-    s += logoIsPath ? '<path class="f-lit" transform="translate(31.8 12) scale(3.6)" d="' + logo + '" style="filter:drop-shadow(0 0 2.5px var(--iso-glow))"/>' : logo;
+    s += '<path class="f-lit" transform="translate(31.8 12) scale(3.6)" d="' + logo + '" style="filter:drop-shadow(0 0 2.5px var(--iso-glow))"/>';
     const shown = (o.text || "").slice(-17);
     s += '<text class="tx-lit" x="9" y="60" font-size="6" style="white-space:pre">&gt; ' + esc2(shown) + "</text>";
     if (o.cursor && p >= 1) s += '<rect class="f-lit" x="' + fmt(9 + (2 + shown.length) * 3.62) + '" y="54.6" width="3.2" height="6.2"/>';
@@ -3621,7 +3649,7 @@ function install3(define2, Iso2) {
         material: L.material,
         color: L.color,
         glow: L.glow,
-        top: L.icon ? (f) => f.svg('<path class="ln-strong" d="' + (ICONS[L.icon] || L.icon) + '"/>', { u: w / 2 - 9, v: d / 2 - 9, transform: "scale(.75)" }) : void 0,
+        top: L.icon ? (f) => f.svg('<path class="ln-strong" d="' + iconPath(L.icon) + '"/>', { u: w / 2 - 9, v: d / 2 - 9, transform: "scale(.75)" }) : void 0,
         left: L.label && o.labels === "face" ? (f) => f.text(L.label, 8, t / 2 + 2, { size: Math.min(5, t * 0.8), cls: "tx tx-label", spacing: 0.8 }) : void 0
       });
       if (L.label && o.labels !== "face") {
@@ -3645,7 +3673,7 @@ function install3(define2, Iso2) {
       glow: o.glow,
       top: o.icon ? (f) => {
         const s = (o.iconSize ?? Math.min(w, d) * 0.5) / 24;
-        f.svg('<path class="' + (o.material === "lit" ? "ln-strong" : o.iconClass || "ln-strong") + '" d="' + (ICONS[o.icon] || o.icon) + '"/>', { u: (f.w - 24 * s) / 2, v: (f.h - 24 * s) / 2, transform: "scale(" + fmt(s) + ")" });
+        f.svg('<path class="' + cssClass(o.material === "lit" ? "ln-strong" : o.iconClass || "ln-strong") + '" d="' + iconPath(o.icon) + '"/>', { u: (f.w - 24 * s) / 2, v: (f.h - 24 * s) / 2, transform: "scale(" + fmt(s) + ")" });
       } : void 0,
       left: o.label ? (f) => {
         const size = o.labelSize || Math.min(5.5, h * 0.42, (f.w - 6) / (String(o.label).length * 0.72));
@@ -4393,6 +4421,7 @@ var Iso = {
   ICONS,
   MARK,
   icon,
+  iconPath,
   advance: (dt) => clock.advance(dt),
   set manual(v) {
     clock.manual = !!v;

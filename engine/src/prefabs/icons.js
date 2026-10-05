@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+import { pathData, cssClass } from '../math.js';
+
 /* Line icons on a 24-unit grid (stroke only, round caps). Drawn for this engine.
    Use them on faces: face.svg(Iso.icon('database'), { transform: 'scale(0.5)' }) or the `block` prefab. */
 export const ICONS = {
@@ -40,7 +43,8 @@ export const ICONS = {
 /* The 9×9 pixel star (filled). */
 export const MARK = 'M3 3h3v3H3zM4 2h1v1H4zM6 4h1v1H6zM4 6h1v1H4zM2 4h1v1H2zM4 1h1v1H4zM7 4h1v1H7zM4 7h1v1H4zM1 4h1v1H1zM4 0h1v1H4zM8 4h1v1H8zM4 8h1v1H4zM0 4h1v1H0zM2 2h1v1H2zM6 2h1v1H6zM6 6h1v1H6zM2 6h1v1H2z';
 
+/* a built-in icon by name, or raw path data (anything else is dropped) */
+export function iconPath(name) { return ICONS[name] || pathData(name); }
 export function icon(name, cls = 'ln-strong') {
-  const d = ICONS[name] || name;
-  return '<path class="' + cls + '" d="' + d + '"/>';
+  return '<path class="' + cssClass(cls) + '" d="' + iconPath(name) + '"/>';
 }

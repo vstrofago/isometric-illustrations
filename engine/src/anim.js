@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Animation: easing, timelines and tweens.
    Timelines are deterministic functions of scene time (seekable, exportable frame by frame).
    Reactive tweens (node.to) start from the current value at the moment they are created. */

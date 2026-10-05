@@ -1,8 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Scene graph: Node (a drawable primitive) and Group (a container).
    A node renders to one <g data-uid>. Its geometry lives in `opts` (world units);
    its animated state lives in `t` (absolute offsets) and `a` (additive, reset every frame). */
 import { Draw, IDENTITY, compose, makeFrame, applyFrame } from './draw.js';
-import { box3, fmt } from './math.js';
+import { box3, fmt, cssClass, cssValue } from './math.js';
 import { depthSort, makeItem } from './sort.js';
 
 let UID = 0;
@@ -102,9 +103,9 @@ export class Node {
   /* ── rendering ── */
   classes() {
     const o = this.opts, c = ['iso-n'];
-    if (o.material) c.push('m-' + o.material);
+    if (o.material) c.push('m-' + cssClass(o.material));
     if (o.color) c.push('m-tint');
-    if (o.class) c.push(o.class);
+    if (o.class) c.push(cssClass(o.class));
     if (o.glow) c.push('glow');
     if (this.interactive()) c.push('hit');
     return c.join(' ');
@@ -112,8 +113,8 @@ export class Node {
   interactive() { return !!(this.handlers && (this.handlers.click || this.handlers.press)) || !!this.opts.interactive; }
   styleAttr() {
     const o = this.opts, s = [];
-    if (o.color) s.push('--iso-tint:' + o.color);
-    if (o.style) for (const k in o.style) s.push(k + ':' + o.style[k]);
+    if (o.color) s.push('--iso-tint:' + cssValue(o.color));
+    if (o.style) for (const k in o.style) if (/^-{0,2}[a-z][\w-]*$/i.test(k)) s.push(k + ':' + cssValue(o.style[k]));
     const op = this.opacity();
     if (op !== 1) s.push('opacity:' + fmt(op));
     if (this.hidden) s.push('display:none');
@@ -141,7 +142,7 @@ export class Node {
     s += this.styleAttr();
     if (this.interactive()) {
       const o = this.opts;
-      s += ' tabindex="0" role="' + (o.role || 'button') + '"';
+      s += ' tabindex="0" role="' + esc(o.role || 'button') + '"';
       if (o.label) s += ' aria-label="' + esc(o.label) + '"';
       if (o.pressed !== undefined) s += ' aria-pressed="' + !!o.pressed + '"';
     }
@@ -174,8 +175,8 @@ export class Node {
     if (this.restyle) {
       this.el.setAttribute('class', this.classes());
       this.el.style.display = this.hidden ? 'none' : '';
-      if (this.opts.color) this.el.style.setProperty('--iso-tint', this.opts.color);
-      if (this.opts.style) for (const k in this.opts.style) this.el.style.setProperty(k, this.opts.style[k]);
+      if (this.opts.color) this.el.style.setProperty('--iso-tint', cssValue(this.opts.color));
+      if (this.opts.style) for (const k in this.opts.style) if (/^-{0,2}[a-z][\w-]*$/i.test(k)) this.el.style.setProperty(k, cssValue(this.opts.style[k]));
       if (this.opts.pressed !== undefined) this.el.setAttribute('aria-pressed', !!this.opts.pressed);
       if (this.opts.label) this.el.setAttribute('aria-label', this.opts.label);
       if (this.interactive() && !this.el.hasAttribute('tabindex')) { this.el.setAttribute('tabindex', '0'); this.el.setAttribute('role', this.opts.role || 'button'); }

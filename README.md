@@ -1,114 +1,169 @@
-# Iso — ilustraciones isométricas
+# Iso
 
-Un motor de ilustración, diagramas y animación isométrica en SVG (sin dependencias en tiempo de
-ejecución, ~35 KB gzip) y una **skill portable** para que cualquier agente cree estas figuras de forma
-pulida y repetible.
+**Isometric illustrations, dioramas and diagrams, drawn in hairlines.**
+An SVG engine with depth sorting, animation and export, plus an agent skill that teaches Claude (or any
+agent that reads `SKILL.md`) to plan, build, check and ship these figures.
+
+[![CI](https://github.com/vstrofago/isometric-illustrations/actions/workflows/ci.yml/badge.svg)](https://github.com/vstrofago/isometric-illustrations/actions/workflows/ci.yml)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+![Zero runtime dependencies](https://img.shields.io/badge/runtime%20dependencies-0-lightgrey.svg)
+
+[Español](README.es.md)
+
+![Packing line: boxes ride an L-shaped conveyor from a box former through a taping tunnel and a scanner into a truck](docs/img/packing-line.gif)
 
 | | |
 |---|---|
-| ![Línea de empaquetado](docs/img/packing-line.gif) | ![Ordenador de escritorio](docs/img/desk-computer.gif) |
-| **Fig. 3 · Packing line** — las cajas salen abiertas de la formadora, se precintan en el túnel, giran en la esquina, reciben su etiqueta en el escáner y entran en el camión; una carretilla trabaja entre las estanterías. | **Fig. 2 · Desk computer** — clic para encender (línea CRT → apertura → brillo) y escribe en tu teclado. |
-| ![Arquitectura](docs/img/architecture.gif) | ![Server room](docs/img/server-room.png) |
-| **Fig. 4 · Arquitectura** — diagrama a partir de datos: nodos en rejilla, aristas enrutadas, paquetes en tránsito. | **Fig. 5 · Server room** — la figura entera es un JSON renderizado con `Iso.render()`. |
+| ![Desk computer powering on](docs/img/desk-computer.gif) | ![Service architecture diagram with packets in flight](docs/img/architecture.gif) |
+| **Desk computer**: click to power on (a CRT line opens into the picture), then type. | **Service architecture**: a diagram from data, with routed edges and packets in flight. |
 
-## Empezar
+## Why
 
-```bash
-npm install          # solo herramientas de desarrollo (esbuild, playwright)
-npm run build        # engine/src → dist/iso.js (+ copia en la skill)
-npm run serve        # http://localhost:8080 → galería, ejemplos y playground
-npm test             # tests unitarios + render de cada ejemplo sin errores
-```
+Isometric line art explains systems well: machines, places, pipelines, architectures. It is also slow
+to draw by hand and hard to animate. Iso lets you describe objects in world units and does the rest:
+projection, occlusion, framing, motion and export. The skill packages the know-how so an agent produces
+a polished figure from a one-line request.
 
-Los ejemplos también funcionan abriendo el HTML directamente (`file://`).
+## Quick start
 
 ```html
 <div id="app"></div>
-<script src="dist/iso.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/vstrofago/isometric-illustrations@v0.1.0/dist/iso.min.js"></script>
 <script>
   const s = Iso.scene('#app', { figure: { index: 'Fig. 1', title: 'Hello' } });
-  s.platform({ size: [160, 120] });          // la superficie superior es z = 0
-  s.laptop({ at: [-10, 0, 0] });             // prefabs: `at` = centro de la huella
-  s.card({ id: 'card', at: [44, 24, 0] });   // el "momento iluminado"
+  s.platform({ size: [160, 120] });          // the top surface is z = 0
+  s.laptop({ at: [-10, 0, 0] });             // prefabs: `at` is the centre of the footprint
+  s.card({ id: 'card', at: [44, 24, 0] });   // the one lit moment
   s.float('card', { amp: 4 });
-  s.assemble();                              // entrada escalonada
+  s.assemble();                              // drop in, back to front
 </script>
 ```
 
-## Qué incluye
+The same scene as data:
 
-**Motor** (`engine/src/`)
-- Proyección isométrica real (30°) o dimétrica 2:1; ejes `x` → abajo-derecha, `y` → abajo-izquierda, `z` → arriba.
-- Primitivas: cajas redondeadas con chaflán, prismas (convexos y cóncavos), cilindros, conos, anillos
-  segmentados, esferas, paneles (móviles/pantallas), poliedros, texto sobre planos, conectores
-  ortogonales, cintas, hélices, contenido 2D sobre cualquier cara.
-- **Ordenación de profundidad** topológica por ejes separadores, con resolución por menor penetración;
-  los objetos en movimiento se recolocan en cada fotograma.
-- **Animación** determinista: líneas de tiempo (`to/from/fromTo/set/call`, posiciones relativas,
-  stagger por profundidad), tweens reactivos y presets: `assemble`, `float`, `travel`, `orbit`, `pulse`,
-  `blink`, `spin`, `drawOn`, `typewriter`, `hoverLift`. Respeta `prefers-reduced-motion`.
-- **Interacción**: clic, hover, teclado (Tab + Enter), estado en el pie de figura.
-- **Temas**: `dark`, `light`, `paper`, `blueprint`, `terminal` o tu paleta (`colors`); materiales
-  `lit`, `glass`, `screen`, `dark`, `ghost`, `wire`, `solid`, `accent`, tintes.
-- **Exportación**: SVG con colores incrustados, PNG; MP4/GIF/WebM fotograma a fotograma con la CLI.
+```js
+Iso.render({
+  figure: { index: 'Fig. 1', title: 'Hello' },
+  objects: [
+    { type: 'platform', size: [160, 120] },
+    { type: 'laptop', at: [-10, 0, 0] },
+    { type: 'card', id: 'card', at: [44, 24, 0] },
+  ],
+  animations: [{ type: 'assemble' }, { type: 'float', target: 'card', amp: 4 }],
+}, '#app');
+```
 
-**Prefabs** (35): plataforma, árboles y bosques, plantas, farolas, bancos, coches, paneles solares,
-marcadores, zonas, placas, escritorio · caja de cartón, palé, estantería, carretilla elevadora, camión,
-escáner, túnel · móvil, tarjeta, portátil, monitor, teclado, el ordenador de
-escritorio con CRT, servidor, base de datos, chip, router · edificio, torre, portal de cristal, cinta
-transportadora, pila de capas, bloque de diagrama con icono. Más 34 iconos de línea.
+Or as an ES module: `import Iso from './dist/iso.esm.js'`.
 
-**Diagramas**: `s.diagram({ nodes, edges, zones })` coloca nodos en rejilla, enruta aristas, recorta las
-flechas para que no queden ocultas tras nodos altos y anima paquetes.
+## The agent skill
 
-**JSON**: `Iso.render(spec)` construye una escena desde datos (objetos, animaciones, interacciones).
+`skills/isometric-illustrations/` is a self-contained [Agent Skill](https://agentskills.io): `SKILL.md`,
+references, the bundled engine, templates, and scripts to scaffold, render and package figures.
 
-## La skill (`skills/isometric-illustrations/`)
+**Claude Code**: add this repository as a plugin marketplace and install the plugin:
 
-Carpeta autocontenida con formato *Agent Skills* (`SKILL.md` + referencias + motor + scripts):
+```
+/plugin marketplace add vstrofago/isometric-illustrations
+/plugin install isometric-illustrations@vstrofago
+```
 
-- `SKILL.md` — flujo de trabajo, convenciones de colocación, reglas de estilo y checklist.
-- `references/` — API completa, catálogo de prefabs, lenguaje visual, recetas de movimiento,
-  composición, diagramas, formato JSON y resolución de problemas.
-- `assets/iso.js` + plantillas JS y JSON.
-- `scripts/new.mjs` (crear figura), `scripts/render.mjs` (PNG, hoja de contactos, GIF, MP4, SVG,
-  acciones simuladas para probar interacciones), `scripts/build.mjs` (HTML autocontenido).
-
-Instalación:
+**Copy the folder** (Claude Code, or any agent that loads skill folders):
 
 ```bash
-tools/install-skill.sh                    # Claude Code, usuario   (~/.claude/skills)
-tools/install-skill.sh --project ../app   # Claude Code, proyecto  (../app/.claude/skills)
-tools/install-skill.sh --dest <carpeta>   # cualquier agente que lea carpetas de skills (SKILL.md)
-tools/install-skill.sh --zip              # dist/isometric-illustrations.zip para subir en claude.ai
+tools/install-skill.sh                   # ~/.claude/skills
+tools/install-skill.sh --project ../app  # ../app/.claude/skills
+tools/install-skill.sh --dest <dir>      # anywhere else
 ```
 
-En este repositorio la skill ya está enlazada en `.claude/skills/` y `AGENTS.md` la señala para otros
-agentes. El flujo que sigue un agente: planificar en unidades de mundo → `new.mjs` → construir con
-prefabs → `render.mjs` y mirar el PNG → iterar → `build.mjs` y entregar (más GIF/MP4 si hace falta).
+**claude.ai**: download `isometric-illustrations.zip` from the
+[latest release](https://github.com/vstrofago/isometric-illustrations/releases) (or run
+`npm run skill:zip`) and upload it in the Skills section of claude.ai settings.
 
-## Playground
+Then ask in plain words:
 
-`playground/` — editor JSON/JS con vista previa en vivo, presets, cambio de tema y descarga de SVG,
-PNG o una página HTML autocontenida. Pensado para que alguien sin código ajuste una figura.
+> Make an animated isometric diagram of our checkout flow: web, API, orders, Postgres and a queue.
+>
+> Draw a small isometric warehouse with a conveyor and boxes for our landing page hero, dark theme, as an MP4.
 
-## Estructura
+The agent plans in world units, builds with prefabs, renders a PNG to check occlusion and framing, and
+hands you a single self-contained HTML file (plus PNG, GIF or MP4 if you ask).
+
+## What's inside
+
+- **Primitives**: rounded and chamfered boxes, prisms, cylinders, cones, segmented tubes, spheres,
+  panels, hulls, text on planes, orthogonal connectors, ribbons, 2D content on any face.
+- **Depth**: topological sorting by separating axes; moving objects re-sort every frame and pass
+  behind and in front of things correctly.
+- **Motion**: deterministic timelines and presets (`assemble`, `float`, `travel`, `orbit`, `pulse`,
+  `blink`, `spin`, `drawOn`, `typewriter`, `hoverLift`); respects `prefers-reduced-motion`.
+- **35 prefabs**: devices (phone, laptop, monitor, server, database, chip, a CRT desk computer),
+  logistics (boxes, pallets, racks, forklift, truck, conveyor, scanner), architecture (buildings,
+  gate, layered stacks, diagram blocks), scenery (platforms, trees, lamps, cars). 34 line icons.
+- **Diagrams**: `s.diagram({ nodes, edges, zones })` places nodes on a grid, routes edges, keeps
+  arrowheads visible next to tall nodes and animates packets.
+- **Themes**: dark, light, paper, blueprint, terminal, or your palette via `colors`.
+- **Export**: SVG and PNG in the browser; frame-exact PNG, GIF, MP4 and WebM from the command line.
+- About 35 KB gzipped, no runtime dependencies.
+
+## Examples and playground
+
+```bash
+npm install
+npm run serve        # http://localhost:8080
+```
+
+- `examples/desk-computer.html`, `examples/packing-line.html`, `examples/architecture.html`,
+  `examples/server-room.html` (pure JSON), `examples/hello.html`
+- `playground/`: edit JSON or JS live, switch themes, export SVG, PNG or a self-contained page
+
+Every example is a single HTML file and also works from `file://`.
+
+## Rendering and export
+
+```bash
+node skills/isometric-illustrations/scripts/render.mjs page.html                     # PNG at rest
+node skills/isometric-illustrations/scripts/render.mjs page.html --sheet sheet.png   # frames over time
+node skills/isometric-illustrations/scripts/render.mjs page.html --video out.mp4 --duration 6
+node skills/isometric-illustrations/scripts/render.mjs page.html --gif out.gif --duration 4
+node skills/isometric-illustrations/scripts/build.mjs page.html                      # one self-contained file
+```
+
+Rendering needs Playwright with Chromium; video and GIF also need ffmpeg.
+
+## Documentation
+
+- [SKILL.md](skills/isometric-illustrations/SKILL.md): workflow, placement conventions, checklist
+- [API](skills/isometric-illustrations/references/api.md) ·
+  [Prefabs](skills/isometric-illustrations/references/prefabs.md) ·
+  [Style](skills/isometric-illustrations/references/style.md) ·
+  [Animation](skills/isometric-illustrations/references/animation.md) ·
+  [Composition](skills/isometric-illustrations/references/composition.md) ·
+  [Diagrams](skills/isometric-illustrations/references/diagrams.md) ·
+  [JSON spec](skills/isometric-illustrations/references/spec.md) ·
+  [Troubleshooting](skills/isometric-illustrations/references/troubleshooting.md)
+
+## Project layout
 
 ```
-engine/src/          motor (ES modules): math, draw, node, sort, shapes, scene, anim, paths,
-                     behaviors, style, figure, export, diagram, spec, prefabs/
-dist/                iso.js (global), iso.min.js, iso.esm.js
-examples/            figuras de referencia (HTML individuales)
-playground/          editor en vivo
-skills/isometric-illustrations/   la skill portable
-tests/               unitarios (node:test) + humo visual (Playwright)
-tools/               bundle, instalador de la skill, utilidades de depuración
-docs/img/            capturas y GIFs
+engine/src/                      the engine (ES modules) and prefabs
+dist/                            iso.js (global), iso.min.js, iso.esm.js (built, committed)
+skills/isometric-illustrations/  the agent skill (self-contained)
+examples/ playground/            figures and the live editor
+tests/                           unit tests (node:test) and visual tests (Playwright)
+tools/                           bundler, skill validator and installer, debug helpers
+.claude-plugin/                  Claude Code plugin and marketplace manifests
 ```
 
-## Origen
+## Contributing
 
-El estilo parte de la figura `DeskComputer` del sistema de diseño **Stoico** (líneas de 1px, rellenos
-a un pelo del fondo, un único elemento iluminado) y de las referencias en vídeo (una diorama animada y el ordenador con encendido CRT). El motor generaliza aquellas primitivas en un sistema completo.
+Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup, the drawing
+style rules and how to add a prefab. Please follow the [Code of Conduct](CODE_OF_CONDUCT.md), and report
+security issues privately as described in [SECURITY.md](SECURITY.md).
 
-Licencia MIT.
+## License
+
+[Apache License 2.0](LICENSE). See [NOTICE](NOTICE). The licence doesn't grant rights to the pixel-star
+mark or the Stoico and vstrofago names; replace the mark with your own in products.
+
+The visual language comes from the Stoico design system: 1px lines, fills a hair off the page colour,
+one lit moment.

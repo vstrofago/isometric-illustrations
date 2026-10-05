@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Isometric engine: math helpers.
    World axes: x → screen right-down, y → screen left-down, z → up.
    The viewer looks along (−1, −1, −2S): larger x, y or z is closer to the viewer. */
@@ -11,6 +12,18 @@ export const fmt = (n) => {
   const v = Math.round(n * 100) / 100;
   return Object.is(v, -0) ? '0' : String(v);
 };
+
+/* ── sanitising (scenes may be built from untrusted JSON) ── */
+export const escAttr = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+/* class lists: letters, digits, _, - and spaces only */
+export const cssClass = (s) => String(s ?? '').replace(/[^\w\- ]/g, '');
+/* a CSS value without the characters that end a declaration or an attribute */
+export const cssValue = (s) => String(s ?? '').replace(/[;"'<>{}\\]/g, '');
+export const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? fmt(n) : ''; };
+export const dashArray = (s) => String(s ?? '').replace(/[^0-9.,\s]/g, '').trim();
+export const pathData = (s) => (/^[MmLlHhVvCcSsQqTtAaZzEe0-9.,\s+-]*$/.test(String(s ?? '')) ? String(s ?? '') : '');
+export const textAnchor = (a) => (a === 'middle' || a === 'end' ? a : 'start');
+export const fontWeight = (w) => (/^(normal|bold|[1-9]00)$/.test(String(w)) ? String(w) : '');
 
 /* A projection. angle 30 is true isometric; 26.565 is the 2:1 "pixel" dimetric. */
 export function makeView(angle = 30) {

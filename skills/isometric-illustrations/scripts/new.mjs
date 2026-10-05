@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: Apache-2.0
 /* Scaffold a new figure from the skill's templates.
    node new.mjs out/my-figure.html [--spec] [--title "My figure"] [--inline]
    --spec    JSON-spec template instead of the JS template

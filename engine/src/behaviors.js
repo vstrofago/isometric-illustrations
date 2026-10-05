@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Motion presets. Each one is a deterministic function of scene time, so scenes can be
    seeked, paused and exported frame by frame. All return a handle with stop(). */
 import { Scene } from './scene.js';

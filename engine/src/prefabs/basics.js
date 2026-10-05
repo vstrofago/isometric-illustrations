@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Scenery prefabs: platforms, trees, plants, lamps, markers, zones, plaques, desks.
    Local origin = centre of the footprint at the base; `at` and `rot` place the prefab. */
 import { rng } from '../math.js';

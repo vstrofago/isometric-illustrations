@@ -1,12 +1,14 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Figure frame: a quiet card with mono captions at the four corners
    (index · name · hint · state), the same grammar as the reference figures. */
 import { injectCSS } from './style.js';
+import { cssClass } from './math.js';
 
 export function figure(host, o = {}) {
   injectCSS();
   host = typeof host === 'string' ? document.querySelector(host) : host;
   const fig = document.createElement('figure');
-  fig.className = 'iso-fig iso-' + (o.theme || 'dark') + (o.class ? ' ' + o.class : '');
+  fig.className = 'iso-fig iso-' + cssClass(o.theme || 'dark') + (o.class ? ' ' + cssClass(o.class) : '');
   const cap = (pos, text, live) => {
     const p = document.createElement('p');
     p.className = 'iso-cap iso-cap-' + pos;

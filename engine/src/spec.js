@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Declarative scenes: Iso.render(spec) builds a scene from plain JSON.
    {
      host: '#app', theme: 'dark', figure: {index, title, hint, status}, padding, angle,

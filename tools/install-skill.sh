@@ -7,6 +7,7 @@
 #   tools/install-skill.sh --zip           # dist/isometric-illustrations.zip (upload to claude.ai › Skills)
 #
 # The skill folder is self-contained: SKILL.md, references/, assets/iso.js, scripts/.
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
 src="$here/skills/isometric-illustrations"

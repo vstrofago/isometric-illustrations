@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Measure per-frame update cost of a scene page (manual clock). */
 import { chromium } from 'playwright';
 const file = process.argv[2] || 'examples/packing-line.html', from = +(process.argv[3] || 3);

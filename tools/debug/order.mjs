@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Debug helper: print draw order and placement decisions for a scene page. */
 import { chromium } from 'playwright';
 const file = process.argv[2] || 'tests/visual/motion.html', id = process.argv[3] || 'post4', t = +(process.argv[4] || 2);

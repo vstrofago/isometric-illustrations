@@ -1,6 +1,12 @@
 ---
 name: isometric-illustrations
-description: Create polished isometric illustrations, dioramas and diagrams — static or animated, optionally interactive — as self-contained HTML/SVG, plus PNG, GIF or MP4 exports. Uses the bundled Iso engine (SVG, zero dependencies) with depth sorting, prefabs (devices, buildings, trees, servers, diagram blocks), timelines and travelling objects. Use when someone asks for an isometric drawing, a 3D-looking technical illustration, an isometric architecture/system diagram, an animated hero or explainer figure, a diorama of a place or product, or a "line-art isometric" visual in any medium.
+description: Create polished isometric illustrations, dioramas and diagrams — static, animated or interactive — as self-contained HTML/SVG, with PNG, GIF and MP4 exports. Bundles the Iso engine (SVG, zero dependencies) with depth sorting, timelines, travelling objects and 35 prefabs (devices, servers, buildings, trees, boxes, conveyors, forklifts, trucks, diagram blocks). Use it whenever someone wants an isometric drawing, a 3D-looking technical or line-art illustration, an isometric architecture or system diagram, an animated hero or explainer figure for a site or a launch, or a diorama of a place, product or process, even if they never say the word isometric.
+license: Apache-2.0. Complete terms in LICENSE.txt
+compatibility: Output is HTML/SVG that runs in any modern browser. The render and export scripts need Node 18+ and Playwright (Chromium); video and GIF export also need ffmpeg.
+metadata:
+  version: "0.1.0"
+  author: vstrofago
+  repository: https://github.com/vstrofago/isometric-illustrations
 ---
 
 # Isometric illustrations with Iso

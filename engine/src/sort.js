@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Depth sorting for isometric scenes.
    Every item has a world AABB. Two items only need an order when their screen silhouettes
    (hexagons) overlap; then a separating axis tells which one is behind: if A ends where B begins

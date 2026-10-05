@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Iso — an isometric illustration and animation engine. SVG, zero dependencies. */
 import * as math from './math.js';
 import { Node, Group } from './node.js';
@@ -8,7 +9,7 @@ import { Path, path } from './paths.js';
 import { css, injectCSS, THEMES, MATERIALS } from './style.js';
 import { figure } from './figure.js';
 import { depthSort } from './sort.js';
-import { installPrefabs, ICONS, MARK, icon } from './prefabs/index.js';
+import { installPrefabs, ICONS, MARK, icon, iconPath } from './prefabs/index.js';
 import { buildDiagram } from './diagram.js';
 import { renderSpec, pathFrom } from './spec.js';
 import './behaviors.js';
@@ -152,7 +153,7 @@ export const Iso = {
   VERSION, scene, Scene, Node, Group, Face, Timeline, Path, path, ease, getEase, clock,
   shapes, prefabs, define, make, makePrefab, figure, pathFrom,
   render: (spec, host) => renderSpec(Iso, spec, host), css, injectCSS, THEMES, MATERIALS, depthSort,
-  math, rng: math.rng, routePoints, filletPolyline, ICONS, MARK, icon,
+  math, rng: math.rng, routePoints, filletPolyline, ICONS, MARK, icon, iconPath,
   advance: (dt) => clock.advance(dt),
   set manual(v) { clock.manual = !!v; },
   get manual() { return clock.manual; },

@@ -33,7 +33,7 @@ List them at runtime: `Object.keys(Iso.prefabs)`. Add your own with `Iso.define`
 | `laptop` | `w` 40, `d` 28, `open` 105 (lid angle), `screen` | Screen faces +y. |
 | `monitor` | `w` 48, `h` 30, `screen` | On a stand, faces +y. |
 | `keyboard` | `w` 186, `d` 52, `h` 7 | Full keys (ids `<id>-key-<name>`) when `w ≥ 120`, a printed grid below. API: `press(name, down)`. |
-| `deskComputer` | `onStatus(text, state)`, `logo` (SVG path or markup), `base` (true) | The reference Fig. 2 machine (≈276×228). API: `power(on?)`, `type(key)`, `press(key, down)`, `body`, `keyboard`, `screenNode`, `state`. CRT power-on animation built in. |
+| `deskComputer` | `onStatus(text, state)`, `logo` (SVG path data in a 9 × 9 box), `base` (true) | The reference Fig. 2 machine (≈276×228). API: `power(on?)`, `type(key)`, `press(key, down)`, `body`, `keyboard`, `screenNode`, `state`. CRT power-on animation built in. |
 | `server` | `w` 28, `d` 34, `h` 64, `units` 6, `seed` | LEDs are panes with class `led` → `s.blink('.led', …)`. |
 | `database` | `r` 16, `tiers` 3, `tierH` 8, `gap` 1.6 | Stacked discs. |
 | `chip` | `size` 30, `pins` 6, `h` 3, `label`, `lit`, `die` (material) | |

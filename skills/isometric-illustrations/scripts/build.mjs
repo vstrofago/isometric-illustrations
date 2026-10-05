@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: Apache-2.0
 /* Make a page self-contained: inline every <script src="…iso.js"> (and other local scripts) so the
    file works anywhere — an artifact, an email attachment, a static host, file://.
 

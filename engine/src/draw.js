@@ -1,7 +1,8 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Draw context: shapes emit an ordered list of SVG ops in screen space.
    Fill ops never stroke (CSS gives them a hairline of their own colour to hide seams);
    line ops never fill. Colour always comes from CSS classes → custom properties. */
-import { DEG, fmt } from './math.js';
+import { DEG, fmt, cssClass } from './math.js';
 
 export const IDENTITY = Object.freeze({ x: 0, y: 0, z: 0, rot: 0, c: 1, s: 0 });
 
@@ -103,13 +104,13 @@ export class Draw {
       const o = ops[i];
       if (o.k === 'r') { s += o.s; i++; continue; }
       if (o.k === 'f') {
-        s += '<path class="' + o.cls + '" d="' + o.d + '"' + (o.extra || '') + '/>';
+        s += '<path class="' + cssClass(o.cls) + '" d="' + o.d + '"' + (o.extra || '') + '/>';
         i++; continue;
       }
       /* merge consecutive strokes of the same class */
       let d = o.d, j = i + 1;
       while (j < ops.length && ops[j].k === 'l' && ops[j].cls === o.cls && ops[j].extra === o.extra) d += ops[j++].d;
-      s += '<path class="' + o.cls + '" d="' + d + '"' + (o.extra || '') + '/>';
+      s += '<path class="' + cssClass(o.cls) + '" d="' + d + '"' + (o.extra || '') + '/>';
       i = j;
     }
     return s;

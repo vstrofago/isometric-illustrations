@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: Apache-2.0
 /* Render an Iso scene (any HTML page that uses the engine) to PNG, MP4, GIF, WebM or SVG.
    The page runs with a manual clock, so every frame is deterministic.
 

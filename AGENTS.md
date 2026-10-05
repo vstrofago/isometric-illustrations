@@ -14,3 +14,8 @@ This repository contains **Iso**, an isometric illustration/animation engine, an
   hairlines, near-background fills, rounded/chamfered forms, one lit moment, colours only via CSS
   custom properties (never literal colours in geometry code).
 - New prefabs go in `engine/src/prefabs/` and must be listed in `references/prefabs.md`.
+- Contribution rules, release steps and licensing are in `CONTRIBUTING.md`. The project is Apache-2.0:
+  new source files start with `// SPDX-License-Identifier: Apache-2.0`, and option values that reach SVG
+  markup go through the sanitisers in `engine/src/math.js`.
+- `npm run validate:skill` checks the skill frontmatter, bundled files and plugin manifests; run it after
+  touching `skills/` or `.claude-plugin/`.

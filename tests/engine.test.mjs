@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Engine unit tests (no DOM). Run: npm test */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -136,4 +137,21 @@ test('JSON specs build the same scene graph', () => {
   assert.equal(s.get('b').parent, s.get('g'));
   assert.equal(s.behaviors.length, 1);
   assert.ok(s.toString().includes('<path'));
+});
+
+test('untrusted specs cannot inject markup', () => {
+  const evil = '"><script>alert(1)</script><x y="';
+  const s = Iso.render({
+    class: evil, theme: evil, colors: { bg: 'red;}</style><script>', [evil]: 'x' },
+    objects: [
+      { type: 'block', id: evil, class: evil, color: evil, icon: evil, label: evil, style: { [evil]: evil, '--ok': evil } },
+      { type: 'text', text: evil, cls: evil, anchor: evil, weight: evil, spacing: evil },
+      { type: 'line', points: [[0, 0, 0], [10, 0, 0]], dash: evil, flow: evil, width: evil, line: evil },
+      { type: 'rect', size: [10, 10], dash: evil, fill: evil },
+      { type: 'deskComputer', logo: evil },
+      { type: 'stack', layers: [{ label: evil, icon: evil }] },
+    ],
+  }, null);
+  const svg = s.toString();
+  assert.ok(!/<script|<x |alert\(1\)<\/|onerror|<\/style>/i.test(svg), 'markup escaped or dropped');
 });

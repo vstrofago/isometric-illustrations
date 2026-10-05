@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Diagrams: nodes on a grid, orthogonal edges with flowing dashes and travelling packets, zones.
    s.diagram({ grid: 80, nodes: [{id, cell:[i,j], type:'block', icon, label}], edges: [{from, to, packets, label}], zones: [{from:[i,j], to:[i,j], label}] }) */
 import { Group } from './node.js';

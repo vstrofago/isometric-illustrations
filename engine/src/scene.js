@@ -1,5 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Scene: owns the view, the node tree, the SVG element, the clock and the animations. */
-import { makeView, fmt, box3 } from './math.js';
+import { makeView, fmt, box3, cssClass, cssValue } from './math.js';
 import { IDENTITY } from './draw.js';
 import { Node, Group } from './node.js';
 import { makeItem, compareItems, depthSort, hexOverlap, Placer } from './sort.js';
@@ -105,8 +106,8 @@ export class Scene {
     const label = o.label || o.title || 'Isometric illustration';
     const css = [];
     if (o.height) css.push('height:' + o.height + (typeof o.height === 'number' ? 'px' : ''), 'width:100%');
-    if (o.colors) for (const k in o.colors) css.push('--iso-' + k + ':' + o.colors[k]);
-    const svgOpen = '<svg xmlns="http://www.w3.org/2000/svg" class="iso iso-' + o.theme + (o.class ? ' ' + o.class : '') + '" viewBox="' + vb.map(fmt).join(' ') + '" role="img" aria-label="' + escAttr(label) + '"' + (css.length ? ' style="' + escAttr(css.join(';')) + '"' : '') + ' preserveAspectRatio="xMidYMid meet">';
+    if (o.colors) for (const k in o.colors) if (/^[\w-]+$/.test(k)) css.push('--iso-' + k + ':' + cssValue(o.colors[k]));
+    const svgOpen = '<svg xmlns="http://www.w3.org/2000/svg" class="iso iso-' + cssClass(o.theme) + (o.class ? ' ' + cssClass(o.class) : '') + '" viewBox="' + vb.map(fmt).join(' ') + '" role="img" aria-label="' + escAttr(label) + '"' + (css.length ? ' style="' + escAttr(css.join(';')) + '"' : '') + ' preserveAspectRatio="xMidYMid meet">';
     const markup = svgOpen + (o.title ? '<title>' + escAttr(o.title) + '</title>' : '') + '<g class="iso-root">' + html + '</g></svg>';
     if (!this.host || typeof document === 'undefined') { this._markup = markup; return markup; }
     if (this.svg && this.svg.parentNode === this.host) {
@@ -435,6 +436,7 @@ export class Scene {
   on(evt, fn) { (this.listeners[evt] || (this.listeners[evt] = [])).push(fn); return this; }
   emit(evt, arg) { (this.listeners[evt] || []).forEach((f) => f(arg, this)); }
   setTheme(theme) {
+    theme = cssClass(theme);
     const old = 'iso-' + this.opts.theme, nu = 'iso-' + theme;
     if (this.svg) { this.svg.classList.remove(old); this.svg.classList.add(nu); }
     if (this.figure) { this.figure.el.classList.remove(old); this.figure.el.classList.add(nu); }

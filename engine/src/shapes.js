@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Primitives. All geometry is in world units (1 unit ≈ 1 px at zoom 1).
    Conventions
    - box / slab / flat rect:  `at` = min corner [x, y, z]  (or `center` = [cx, cy, z] footprint centre)
@@ -5,7 +6,7 @@
    - every shape accepts: id, material, color, class, glow, layer, hidden, style, anchor
    Faces of solids: top (+z), left (+y, screen-left), right (+x, screen-right). */
 import { Node } from './node.js';
-import { DEG, EPS, fmt, rrect, isConvex, signedArea, insetConvex, rotatePts, circlePts, v3, box3 } from './math.js';
+import { DEG, EPS, fmt, cssClass, num, dashArray, textAnchor, fontWeight, rrect, isConvex, signedArea, insetConvex, rotatePts, circlePts, v3, box3 } from './math.js';
 import { applyFrame, frameVec } from './draw.js';
 
 /* ───────────────────────── Face drawer ─────────────────────────
@@ -19,7 +20,7 @@ export class Face {
     const d = this.d, path = d.dw(pts.map((p) => this.pt(p[0], p[1])), close);
     const fill = opt.fill, line = opt.line === undefined ? 'ln-soft' : opt.line;
     if (fill) d.fill(path, fill);
-    if (line) d.line(path, line, opt.dash ? ' stroke-dasharray="' + opt.dash + '"' : undefined);
+    if (line) d.line(path, line, opt.dash ? ' stroke-dasharray="' + dashArray(opt.dash) + '"' : undefined);
     return this;
   }
   rect(u, v, w, h, opt = {}) { return this._shape(rrect(u, v, w, h, opt.r || 0), true, opt); }
@@ -41,17 +42,17 @@ export class Face {
   }
   /* SVG text laid on the face */
   text(str, u, v, opt = {}) {
-    const size = opt.size || 8, anchor = opt.anchor || 'start';
+    const size = opt.size || 8, anchor = textAnchor(opt.anchor);
     const m = this.d.planeMatrix(this.pt(u, v), this.U, this.V);
-    const ls = opt.spacing !== undefined ? ' letter-spacing="' + opt.spacing + '"' : '';
-    const w = opt.weight ? ' font-weight="' + opt.weight + '"' : '';
-    this.d.raw('<text class="' + (opt.cls || 'tx') + '" transform="' + m + '" font-size="' + fmt(size) + '" text-anchor="' + anchor + '"' + ls + w + (opt.attrs || '') + '>' + escText(str) + '</text>');
+    const ls = opt.spacing !== undefined ? ' letter-spacing="' + num(opt.spacing) + '"' : '';
+    const w = fontWeight(opt.weight) ? ' font-weight="' + fontWeight(opt.weight) + '"' : '';
+    this.d.raw('<text class="' + cssClass(opt.cls || 'tx') + '" transform="' + m + '" font-size="' + fmt(size) + '" text-anchor="' + anchor + '"' + ls + w + (opt.attrs || '') + '>' + escText(str) + '</text>');
     return this;
   }
   /* raw SVG content in face units, optional extra transform (e.g. 'translate(4 4) scale(2)') */
   svg(markup, opt = {}) {
     const m = this.d.planeMatrix(this.pt(opt.u || 0, opt.v || 0), this.U, this.V);
-    this.d.raw('<g transform="' + m + (opt.transform ? ' ' + opt.transform : '') + '"' + (opt.cls ? ' class="' + opt.cls + '"' : '') + '>' + markup + '</g>');
+    this.d.raw('<g transform="' + m + (opt.transform ? ' ' + opt.transform : '') + '"' + (opt.cls ? ' class="' + cssClass(opt.cls) + '"' : '') + '>' + markup + '</g>');
     return this;
   }
   /* sub-face offset by (u, v) */
@@ -495,7 +496,7 @@ export class Flat extends Node {
   draw(d) {
     const o = this.opts, { x, y, z } = this.g();
     const fill = o.fill === undefined ? null : o.fill, line = o.line === undefined ? 'ln-soft' : o.line;
-    const dash = o.dash ? ' stroke-dasharray="' + o.dash + '"' : undefined;
+    const dash = o.dash ? ' stroke-dasharray="' + dashArray(o.dash) + '"' : undefined;
     let path;
     if (o.shape === 'circle' || o.shape === 'ring') {
       const [cx, cy, Z] = d.w(x, y, z);
@@ -537,9 +538,9 @@ export class Line extends Node {
     if (pts.length < 2) return;
     const cls = o.line || o.cls || 'ln';
     let extra = '';
-    if (o.dash) extra += ' stroke-dasharray="' + o.dash + '"';
-    if (o.flow) extra += ' data-flow="' + o.flow + '"';
-    if (o.width) extra += ' stroke-width="' + o.width + '"';
+    if (o.dash) extra += ' stroke-dasharray="' + dashArray(o.dash) + '"';
+    if (o.flow) extra += ' data-flow="' + num(o.flow) + '"';
+    if (o.width) extra += ' stroke-width="' + num(o.width) + '"';
     if (o.reveal !== undefined && o.reveal < 1) extra += ' pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="' + fmt(1 - Math.max(0, o.reveal)) + '"';
     d.line(d.dw(pts, o.closed), cls, extra || undefined);
     if (o.reveal !== undefined && o.reveal < 1) return;
@@ -613,7 +614,7 @@ export class Ribbon extends Node {
     if (L.length < 2) return;
     d.fill(d.dl(L.concat(R.slice().reverse()), true), o.fill || 'f-road');
     if (o.line !== false) { d.line(d.dl(L), o.line || 'ln-soft'); d.line(d.dl(R), o.line || 'ln-soft'); }
-    if (o.center) d.line(d.dl(this.pts()), 'ln-soft', ' stroke-dasharray="' + (o.center === true ? '4 4' : o.center) + '"' + (o.flow ? ' data-flow="' + o.flow + '"' : ''));
+    if (o.center) d.line(d.dl(this.pts()), 'ln-soft', ' stroke-dasharray="' + (o.center === true ? '4 4' : dashArray(o.center)) + '"' + (o.flow ? ' data-flow="' + num(o.flow) + '"' : ''));
   }
 }
 
@@ -658,10 +659,10 @@ export class Text extends Node {
   draw(d) {
     const o = this.opts, [x, y, z] = o.at || [0, 0, 0], size = o.size || 8;
     const pl = PLANES[o.plane || 'screen'];
-    const cls = o.cls || (o.plane === 'screen' || !o.plane ? 'tx tx-label' : 'tx');
-    const anchor = o.anchor || 'start';
-    const ls = o.spacing !== undefined ? ' letter-spacing="' + o.spacing + '"' : '';
-    const wt = o.weight ? ' font-weight="' + o.weight + '"' : '';
+    const cls = cssClass(o.cls || (o.plane === 'screen' || !o.plane ? 'tx tx-label' : 'tx'));
+    const anchor = textAnchor(o.anchor);
+    const ls = o.spacing !== undefined ? ' letter-spacing="' + num(o.spacing) + '"' : '';
+    const wt = fontWeight(o.weight) ? ' font-weight="' + fontWeight(o.weight) + '"' : '';
     let str = String(o.text ?? '');
     if (o.chars !== undefined) str = str.slice(0, Math.max(0, Math.round(o.chars)));
     const lines = str.split('\n');

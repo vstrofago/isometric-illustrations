@@ -1,0 +1,16 @@
+{
+  "name": "vstrofago",
+  "description": "Plugins by vstrofago",
+  "owner": { "name": "vstrofago", "url": "https://github.com/vstrofago" },
+  "plugins": [
+    {
+      "name": "isometric-illustrations",
+      "source": "./",
+      "description": "Isometric illustrations, dioramas and diagrams in hairline SVG, with animation and export.",
+      "version": "0.1.0",
+      "license": "Apache-2.0",
+      "category": "design",
+      "keywords": ["isometric", "illustration", "svg", "diagram", "animation"]
+    }
+  ]
+}

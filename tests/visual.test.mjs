@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Visual smoke test: every example renders in Chromium with no page errors.
    Skips when Playwright or a browser is unavailable. Output PNGs go to out/visual/. */
 import test from 'node:test';

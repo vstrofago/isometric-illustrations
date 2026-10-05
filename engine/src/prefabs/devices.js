@@ -1,6 +1,7 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Device prefabs: phone, card, laptop, monitor, keyboard, desk computer, server, database, chip, router. */
 import { MARK, ICONS } from './icons.js';
-import { rng, fmt } from '../math.js';
+import { rng, fmt, pathData } from '../math.js';
 import { Face } from '../shapes.js';
 
 /* Screen content helper on a Face: mode off | ui | lit | dots | mark */
@@ -276,9 +277,9 @@ function drawCRT(f, n) {
   s += '<rect x="0" y="0" width="' + w + '" height="' + h + '" fill="url(#' + id + 'g)"/>';
   if (openP > 0.4) {
     const a = Math.min(1, (openP - 0.4) / 0.6);
-    const logo = o.logo || MARK, logoIsPath = /^M/.test(logo);
+    const logo = (o.logo && pathData(o.logo)) || MARK; // path data in a 9 × 9 box
     s += '<g style="opacity:' + fmt(a) + '">';
-    s += logoIsPath ? '<path class="f-lit" transform="translate(31.8 12) scale(3.6)" d="' + logo + '" style="filter:drop-shadow(0 0 2.5px var(--iso-glow))"/>' : logo;
+    s += '<path class="f-lit" transform="translate(31.8 12) scale(3.6)" d="' + logo + '" style="filter:drop-shadow(0 0 2.5px var(--iso-glow))"/>';
     const shown = (o.text || '').slice(-17);
     s += '<text class="tx-lit" x="9" y="60" font-size="6" style="white-space:pre">&gt; ' + esc(shown) + '</text>';
     if (o.cursor && p >= 1) s += '<rect class="f-lit" x="' + fmt(9 + (2 + shown.length) * 3.62) + '" y="54.6" width="3.2" height="6.2"/>';

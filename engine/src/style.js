@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Theme and materials. Everything a scene paints reads a custom property, so a theme or a
    material is only a set of property values. Derived tones are declared together with the
    base colours (custom properties resolve where they are declared). */

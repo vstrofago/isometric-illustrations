@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Export: portable SVG (computed colours inlined), PNG, and downloads. */
 import { Scene } from './scene.js';
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* Playground presets. JSON presets go through Iso.render(spec); JS presets run with (Iso, host). */
 window.ISO_PRESETS = {
   hello: {

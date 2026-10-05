@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /* World-space paths with arc-length parameterisation, for motion and for drawing.
    Angles are measured in plan from +x towards +y (clockwise on screen). */
 import { DEG, v3, rrect } from './math.js';
