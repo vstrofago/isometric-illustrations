@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Motion</title>
+<style>body{margin:0;background:#0c0d0e;padding:24px}</style></head><body>
+<div id="app"></div>
+<script src="../../dist/iso.js"></script>
+<script>
+const s = Iso.scene('#app', { figure: { index: 'Fig. 02', title: 'Motion', hint: 'travel · float · assemble', status: 'playing' }, padding: 40 });
+s.box({ id: 'base', at: [-120, -120, -10], size: [240, 240, 10], r: 12, chamfer: 3 });
+s.tube({ id: 'ring', at: [0, 0, 0], r: 80, ri: 56, h: 20, bands: [10], ribs: 72, segments: 16 });
+for (let i = 0; i < 6; i++) { const a = i * 60 * Math.PI / 180; s.box({ id: 'post' + i, center: [Math.cos(a) * 100, Math.sin(a) * 100, 0], size: [10, 10, 34], r: 2 }); }
+s.box({ id: 'core', center: [0, 0, 0], size: [24, 24, 30], r: 4, chamfer: 2 });
+const card = s.box({ id: 'card', center: [0, 0, 20], size: [16, 10, 2], r: 1.5, material: 'lit', glow: true });
+const card2 = s.box({ id: 'card2', center: [0, 0, 0], size: [10, 10, 10], r: 2, material: 'lit', glow: true });
+s.travel('card', Iso.path.circle({ center: [0, 0, 20], r: 68 }), { duration: 6, orient: true });
+s.travel('card2', Iso.path.circle({ center: [0, 0, 0], r: 100 }), { duration: 8 });
+s.float('post*', { amp: 4, period: 2 });
+s.assemble(['post0','post1','post2','post3','post4','post5','core']);
+</script></body></html>

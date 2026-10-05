@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hello, Iso</title>
+<style>html,body{margin:0;background:#0b0c0d}main{max-width:720px;margin:0 auto;padding:24px 16px}</style>
+</head>
+<body>
+<main id="app"></main>
+<script src="../dist/iso.js"></script>
+<script>
+/* The smallest useful figure: a platform, one object, one lit moment, one motion. */
+const s = Iso.scene('#app', { figure: { index: 'Fig. 1', title: 'Hello', hint: 'A first figure', status: 'ready' } });
+s.platform({ size: [160, 120] });
+s.laptop({ at: [-10, 0, 0] });
+s.card({ id: 'card', at: [44, 24, 0] });
+s.float('card', { amp: 4, period: 2.6 });
+s.assemble();
+</script>
+</body>
+</html>

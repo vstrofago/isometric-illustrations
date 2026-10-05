@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Service architecture</title>
+<style>
+  html,body{margin:0;background:#0b0c0d}
+  main{max-width:1100px;margin:0 auto;padding:24px 16px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script src="../dist/iso.js"></script>
+<script>
+/* Fig. 4 — Service architecture. A diagram from data: nodes on a grid, routed edges with flowing
+   dashes and packets, a zone. Hover a service to raise it and read its role. */
+const s = Iso.scene('#app', {
+  figure: { index: 'Fig. 4', title: 'Service architecture', hint: 'Hover a service', status: 'requests flowing' },
+  label: 'Isometric architecture diagram: clients, edge, API, services, database, queue and worker',
+  padding: 26,
+});
+
+s.platform({ size: [560, 330], label: 'checkout · production · eu-west', inset: 12 });
+
+const roles = {
+  clients: 'Clients · web and mobile', edge: 'Edge · TLS and cache', api: 'API · routes and auth checks',
+  auth: 'Auth · sessions and tokens', orders: 'Orders · the write path', search: 'Search · read replicas',
+  db: 'Postgres · primary', queue: 'Queue · at-least-once', worker: 'Worker · emails and invoices',
+};
+
+const d = s.diagram({
+  grid: 88, origin: [-222, -88], nodeSize: 34, speed: 46,
+  zones: [{ from: [2, 0], to: [5, 2], label: 'VPC · private subnets', pad: 34 }],
+  nodes: [
+    { id: 'clients', cell: [0, 1], icon: 'users', label: 'Clients' },
+    { id: 'edge', cell: [1, 1], icon: 'globe', label: 'Edge' },
+    { id: 'api', cell: [2, 1], icon: 'server', label: 'API', size: [40, 40, 16], material: 'lit', glow: true },
+    { id: 'auth', cell: [3, 0], icon: 'lock', label: 'Auth' },
+    { id: 'orders', cell: [3, 1], icon: 'cart', label: 'Orders' },
+    { id: 'search', cell: [3, 2], icon: 'search', label: 'Search' },
+    { id: 'db', cell: [4.4, 0], type: 'database', r: 16, tiers: 3, tierH: 7 },
+    { id: 'queue', cell: [4.4, 1.55], icon: 'queue', label: 'Queue' },
+    { id: 'worker', cell: [5.4, 1.55], icon: 'cpu', label: 'Worker' },
+  ],
+  edges: [
+    { from: 'clients', to: 'edge', packets: 2, label: 'https' },
+    { from: 'edge', to: 'api', packets: 2 },
+    { from: 'api', to: 'auth', route: 'y', packets: 1 },
+    { from: 'api', to: 'orders', packets: 1 },
+    { from: 'api', to: 'search', route: 'y', packets: 1 },
+    { from: 'auth', to: 'db' },
+    { from: 'orders', to: 'db', route: 'y' },
+    { from: 'orders', to: 'queue', route: 'y', packets: 1 },
+    { from: 'queue', to: 'worker', packets: 1, label: 'jobs' },
+  ],
+});
+
+/* hover: raise the service and say what it does */
+for (const [id, node] of d.nodesById) {
+  node.set('label', roles[id]);
+  node.on('hover', () => { s.to(node, { z: 6 }, { duration: 0.22 }); s.status(roles[id].toLowerCase()); });
+  node.on('leave', () => { s.to(node, { z: 0 }, { duration: 0.22 }); s.status('requests flowing'); });
+}
+
+s.assemble([...d.nodesById.values()], { stagger: 0.07, drop: 30 });
+s.drawOn(d.edges.map((e) => e.line), { delay: 0.9, duration: 0.9, stagger: 0.08 });
+</script>
+</body>
+</html>

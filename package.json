@@ -1,0 +1,22 @@
+{
+  "name": "isometric-illustrations",
+  "version": "0.1.0",
+  "description": "Iso: an isometric illustration, diagram and animation engine (SVG, zero runtime dependencies) plus a portable agent skill.",
+  "type": "module",
+  "main": "dist/iso.esm.js",
+  "module": "dist/iso.esm.js",
+  "browser": "dist/iso.js",
+  "files": ["dist", "engine/src"],
+  "scripts": {
+    "build": "node tools/bundle.mjs",
+    "dev": "node tools/bundle.mjs --watch",
+    "test": "node --test tests/",
+    "render": "node skills/isometric-illustrations/scripts/render.mjs",
+    "serve": "npx http-server -c-1 -p 8080 ."
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "playwright": "1.56.1"
+  }
+}

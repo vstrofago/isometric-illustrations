@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Server room</title>
+<style>
+  html,body{margin:0;background:#0b0c0d}
+  main{max-width:960px;margin:0 auto;padding:24px 16px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script src="../dist/iso.js"></script>
+<!-- The whole figure is data: the same JSON can be produced by any agent and rendered with Iso.render(). -->
+<script type="application/json" id="spec">
+{
+  "theme": "dark",
+  "figure": { "index": "Fig. 5", "title": "Server room", "hint": "Hover a rack", "status": "3 racks · healthy" },
+  "label": "Isometric server room: three racks, a core switch and a database, with packets moving between them",
+  "padding": 28,
+  "objects": [
+    { "type": "platform", "size": [300, 240], "label": "dc-1 · row b · 2026", "grid": 20 },
+    { "type": "server", "id": "rack-1", "at": [-90, -60, 0], "units": 7, "h": 70, "seed": 1 },
+    { "type": "server", "id": "rack-2", "at": [-50, -60, 0], "units": 7, "h": 70, "seed": 2 },
+    { "type": "server", "id": "rack-3", "at": [-10, -60, 0], "units": 7, "h": 70, "seed": 3 },
+    { "type": "router", "id": "switch", "at": [-50, 20, 0], "w": 40, "d": 22 },
+    { "type": "database", "id": "db", "at": [70, 20, 0], "r": 18, "tiers": 3 },
+    { "type": "chip", "id": "chip", "at": [70, -60, 0], "size": 30, "label": "ISO", "lit": true },
+    { "type": "connector", "id": "l1", "from": [-90, -36], "to": [-50, 4], "route": "y", "radius": 8, "flow": 12 },
+    { "type": "connector", "id": "l2", "from": [-10, -36], "to": [-50, 4], "route": "y", "radius": 8, "flow": 12 },
+    { "type": "connector", "id": "l3", "from": [-26, 20], "to": [48, 20], "flow": 16 },
+    { "type": "connector", "id": "l4", "from": [70, -38], "to": [70, -2], "flow": 10 },
+    { "type": "card", "id": "packet-a", "at": [-26, 20, 0], "w": 8, "d": 5 },
+    { "type": "card", "id": "packet-b", "at": [-26, 20, 0], "w": 8, "d": 5 },
+    { "type": "label", "at": [70, 20, 34], "text": "primary", "lift": 18 }
+  ],
+  "animations": [
+    { "type": "assemble", "stagger": 0.08, "drop": 30 },
+    { "type": "blink", "target": ".led", "period": 1.3, "duty": 0.6, "stagger": 0.37 },
+    { "type": "travel", "target": ["packet-a", "packet-b"], "path": { "type": "line", "from": [-24, 20, 0.2], "to": [46, 20, 0.2] }, "duration": 2.4 },
+    { "type": "pulse", "target": "chip", "min": 0.75, "max": 1, "period": 2.4 }
+  ],
+  "interactions": [
+    { "target": ["rack-1", "rack-2", "rack-3"], "hover": "lift", "z": 5 }
+  ]
+}
+</script>
+<script>
+  Iso.render(JSON.parse(document.getElementById('spec').textContent), '#app');
+</script>
+</body>
+</html>
