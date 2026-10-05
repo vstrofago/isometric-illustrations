@@ -5,42 +5,25 @@
 <meta name="viewport" content="width=1920">
 <title>Iso · launch card</title>
 <style>
-  /* 1920 × 1080 card for the launch video. ?end shows the closing card. */
-  html,body{margin:0;background:#0b0c0d}
-  #frame{position:relative;width:1920px;height:1080px;overflow:hidden;background:#0b0c0d;color:#ecebe6;font-family:"Geist Mono",ui-monospace,"DejaVu Sans Mono",Menlo,monospace}
-  #stage{position:absolute;left:0;right:0;top:110px;height:700px}
-  .cap{position:absolute;margin:0;font-size:22px;letter-spacing:.08em;text-transform:uppercase;color:rgba(236,235,230,.42)}
-  .tl{top:56px;left:72px;text-transform:none;color:rgba(236,235,230,.7)}
-  .tr{top:56px;right:72px}
-  .bl{bottom:56px;left:72px}
-  .br{bottom:56px;right:72px;color:rgba(236,235,230,.7);text-transform:none}
-  .line{position:absolute;left:0;right:0;text-align:center;margin:0}
-  .title{bottom:190px;font-family:"Geist",ui-sans-serif,"DejaVu Sans",sans-serif;font-weight:500;font-size:64px;letter-spacing:-.02em;color:#ecebe6}
-  .sub{bottom:140px;font-size:24px;letter-spacing:.06em;color:rgba(236,235,230,.55)}
-  .url{bottom:196px;font-size:44px;letter-spacing:.01em;color:#ecebe6}
-  .cmd{bottom:140px;font-size:24px;color:rgba(236,235,230,.55)}
-  .end .title,.end .sub{display:none}
-  .start .url,.start .cmd{display:none}
+  /* 1920 × 1080 card for the launch video. ?end adds the repository address. */
+  html,body{margin:0;background:#151618}
+  #frame{position:relative;width:1920px;height:1080px;overflow:hidden;background:#151618;color:#ecebe6;font-family:"Geist Mono",ui-monospace,"DejaVu Sans Mono",Menlo,monospace}
+  #stage{position:absolute;left:0;right:0;top:130px;height:720px}
+  .url{position:absolute;left:0;right:0;bottom:150px;margin:0;text-align:center;font-size:44px;letter-spacing:.01em;display:none}
+  .end #stage{top:70px}
+  .end .url{display:block}
 </style>
 </head>
 <body>
 <div id="frame">
-  <p class="cap tl">Iso · v0.1</p>
-  <p class="cap tr">Open source · Apache-2.0</p>
   <div id="stage"></div>
-  <p class="line title">Isometric illustrations, drawn in hairlines.</p>
-  <p class="line sub">AN SVG ENGINE + AN AGENT SKILL</p>
-  <p class="line url">github.com/vstrofago/isometric-illustrations</p>
-  <p class="line cmd">/plugin marketplace add vstrofago/isometric-illustrations</p>
-  <p class="cap bl">Depth · motion · export</p>
-  <p class="cap br">35 prefabs · 5 themes · 0 dependencies</p>
+  <p class="url">github.com/vstrofago/isometric-illustrations</p>
 </div>
 <script src="../../dist/iso.js"></script>
 <script>
-const end = /[?&]end\b/.test(location.search);
-document.getElementById('frame').classList.add(end ? 'end' : 'start');
-const s = Iso.scene('#stage', { height: 700, padding: 16, label: 'The word ISO built from cubes on a platform' });
-s.platform({ size: [300, 150], label: 'Iso · v0.1 · Apache-2.0', screws: true });
+if (/[?&]end\b/.test(location.search)) document.getElementById('frame').classList.add('end');
+const s = Iso.scene('#stage', { height: 720, padding: 16, label: 'The word ISO built from cubes on a platform' });
+s.platform({ size: [300, 150], screws: true });
 /* pixel letters standing on the platform, facing screen-left */
 const GLYPHS = {
   I: ['###', '.#.', '.#.', '.#.', '###'],
@@ -59,10 +42,7 @@ for (const ch of 'ISO') {
   }));
   col += g[0].length + 1;
 }
-s.tree({ at: [-128, 48, 0], kind: 'tiered', scale: 1.1 });
-s.tree({ at: [118, 50, 0], kind: 'pine', scale: 0.95 });
-s.tree({ at: [132, 30, 0], kind: 'round', scale: 0.8 });
-const card = s.card({ id: 'card', at: [70, 46, 0], w: 22, d: 14 });
+s.card({ id: 'card', at: [80, 46, 0], w: 22, d: 14 });
 s.float('card', { amp: 5, period: 2.4 });
 s.timeline({ delay: 0.2 }).from(cubes, { z: 60, opacity: 0 }, { duration: 0.7, ease: 'out', stagger: { each: 0.035, from: 'start' } });
 s.timeline({ delay: 1.6 }).from(['card'], { opacity: 0 }, { duration: 0.5 });

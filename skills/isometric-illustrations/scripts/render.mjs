@@ -14,6 +14,7 @@
      click: a node id (data-id) or CSS selector · type: text typed key by key (keydown/keyup on window) · key: one key
    Options: --selector <css> (default: .iso-fig, else svg.iso) · --width <px> viewport width (1200)
             --scale <dpr> (2) · --theme <name> · --wait <ms> extra settle time · --quiet
+            --bare (no figure captions or floor labels) · --hide <css> (hide anything else)
    Needs Playwright (npm i -D playwright) and, for video/gif, ffmpeg on PATH. */
 import { mkdtempSync, rmSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -72,6 +73,8 @@ try {
   await browser.close(); process.exit(3);
 }
 if (opt.theme) await page.evaluate((t) => Iso.scenes().forEach((s) => s.setTheme(t)), opt.theme);
+const hide = [opt.bare && '.iso-cap, .iso .tx-floor', typeof opt.hide === 'string' && opt.hide].filter(Boolean).join(', ');
+if (hide) await page.addStyleTag({ content: hide + '{visibility:hidden!important}' });
 await page.evaluate(() => document.fonts && document.fonts.ready);
 if (opt.wait) await page.waitForTimeout(+opt.wait);
 

@@ -14,8 +14,8 @@ export default function install(define) {
       const m = inset + 6;
       for (const [x, y] of [[-w / 2 + m, -d / 2 + m], [w / 2 - m, -d / 2 + m], [-w / 2 + m, d / 2 - m], [w / 2 - m, d / 2 - m]]) g.circle({ at: [x, y, 0], r: 1.6, line: 'ln-soft' });
     }
-    if (o.label) g.text({ text: o.label, at: [-w / 2 + inset + 6, d / 2 - inset / 2 + 2, 0], plane: 'top', size: o.labelSize || 6, cls: 'tx tx-label', spacing: o.labelSpacing ?? 1.6 });
-    if (o.labelRight) g.text({ text: o.labelRight, at: [w / 2 - inset / 2 - 2, d / 2 - inset - 6, 0], plane: 'top-y', size: o.labelSize || 6, cls: 'tx tx-label', spacing: o.labelSpacing ?? 1.6 });
+    if (o.label) g.text({ text: o.label, at: [-w / 2 + inset + 6, d / 2 - inset / 2 + 2, 0], plane: 'top', size: o.labelSize || 6, cls: 'tx tx-label tx-floor', spacing: o.labelSpacing ?? 1.6 });
+    if (o.labelRight) g.text({ text: o.labelRight, at: [w / 2 - inset / 2 - 2, d / 2 - inset - 6, 0], plane: 'top-y', size: o.labelSize || 6, cls: 'tx tx-label tx-floor', spacing: o.labelSpacing ?? 1.6 });
   });
 
   /* Trees. kind: tiered (stacked discs) · pine · cone · round · bush · lollipop */
@@ -91,7 +91,7 @@ export default function install(define) {
   define('zone', (g, o) => {
     const [w, d] = o.size || [120, 80], r = o.r ?? 8;
     g.rect({ at: [-w / 2, -d / 2, o.z || 0], size: [w, d], r, fill: o.fill === undefined ? null : o.fill, line: o.line || 'ln-soft', dash: o.dash ?? '4 4' });
-    if (o.label) g.text({ text: o.label, at: [-w / 2 + 6, d / 2 - 6, o.z || 0], plane: 'top', size: o.labelSize || 6, cls: 'tx tx-label', spacing: 1.4 });
+    if (o.label) g.text({ text: o.label, at: [-w / 2 + 6, d / 2 - 6, o.z || 0], plane: 'top', size: o.labelSize || 6, cls: 'tx tx-label tx-floor', spacing: 1.4 });
   }, { sort: 'none', flatish: true });
 
   /* small plate lying on the floor with text */

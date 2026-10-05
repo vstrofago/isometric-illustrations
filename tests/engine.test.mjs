@@ -155,3 +155,20 @@ test('untrusted specs cannot inject markup', () => {
   const svg = s.toString();
   assert.ok(!/<script|<x |alert\(1\)<\/|onerror|<\/style>/i.test(svg), 'markup escaped or dropped');
 });
+
+test('drawOn reveals a line by length and holds its packets until it arrives', () => {
+  const s = Iso.scene(null, {});
+  const d = s.diagram({ grid: 100, nodes: [{ id: 'a', cell: [0, 0] }, { id: 'b', cell: [1, 0] }], edges: [{ from: 'a', to: 'b', packets: 2 }] });
+  const line = d.edges[0].line, cards = line.attached;
+  assert.equal(cards.length, 2);
+  s.drawOn([line], { delay: 0.5, duration: 1 });
+  const drawn = () => (s.toString().match(new RegExp('data-uid="' + line.uid + '"[^>]*>(.*?)</g>')) || [, ''])[1];
+  s.seek(0);
+  assert.ok(!drawn().includes('<path'), 'nothing drawn before the line starts');
+  assert.ok(cards.every((c) => c.t.opacity === 0), 'packets hidden before the line arrives');
+  s.seek(1);
+  assert.ok(drawn().includes('<path') && !drawn().includes('data-flow'), 'part of the line, without the flow dash');
+  s.seek(3);
+  assert.ok(drawn().includes('data-flow'), 'complete line flows');
+  assert.ok(cards.every((c) => c.t.opacity === 1), 'packets visible once the line is drawn');
+});

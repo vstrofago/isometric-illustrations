@@ -1515,22 +1515,51 @@ var Line = class extends Node {
     return box3.valid(b) ? b : null;
   }
   draw(d) {
-    const o = this.opts, pts = this.pts().map((p) => d.w(p[0], p[1], p[2]));
+    const o = this.opts;
+    let pts = this.pts();
     if (pts.length < 2) return;
     const cls = o.line || o.cls || "ln";
+    const revealing = o.reveal !== void 0 && o.reveal < 1;
+    if (revealing) {
+      pts = cutPolyline(pts, Math.max(0, o.reveal));
+      if (pts.length < 2) return;
+    }
+    pts = pts.map((p) => d.w(p[0], p[1], p[2]));
     let extra = "";
-    if (o.dash) extra += ' stroke-dasharray="' + dashArray(o.dash) + '"';
-    if (o.flow) extra += ' data-flow="' + num(o.flow) + '"';
+    if (o.dash && !revealing) extra += ' stroke-dasharray="' + dashArray(o.dash) + '"';
+    if (o.flow && !revealing) extra += ' data-flow="' + num(o.flow) + '"';
     if (o.width) extra += ' stroke-width="' + num(o.width) + '"';
-    if (o.reveal !== void 0 && o.reveal < 1) extra += ' pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="' + fmt(1 - Math.max(0, o.reveal)) + '"';
-    d.line(d.dw(pts, o.closed), cls, extra || void 0);
-    if (o.reveal !== void 0 && o.reveal < 1) return;
+    d.line(d.dw(pts, o.closed && !revealing), cls, extra || void 0);
+    if (revealing) return;
     const as = o.arrowSize || 5;
     if (o.arrow === "end" || o.arrow === "both" || o.arrow === true) arrowHead(d, pts[pts.length - 2], pts[pts.length - 1], as, o.arrowClass || "f-ink");
     if (o.arrow === "start" || o.arrow === "both") arrowHead(d, pts[1], pts[0], as, o.arrowClass || "f-ink");
     if (o.dots) for (const p of [pts[0], pts[pts.length - 1]]) d.both(d.hcircle(p[0], p[1], p[2], o.dots), "f-ink", null);
   }
 };
+function cutPolyline(pts, f) {
+  const seg = [];
+  let total = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1], pts[i][2] - pts[i - 1][2]);
+    seg.push(l);
+    total += l;
+  }
+  let left = total * f;
+  if (left <= EPS) return [];
+  const out = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    if (left >= seg[i - 1]) {
+      out.push(pts[i]);
+      left -= seg[i - 1];
+      continue;
+    }
+    const k = left / (seg[i - 1] || 1), a = pts[i - 1], b = pts[i];
+    out.push([a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]);
+    break;
+  }
+  return out;
+}
 function routePoints(from, to, opt = {}) {
   const z = opt.z || 0, r = opt.radius ?? 6, mode = opt.route || "auto";
   const [x0, y0] = from, [x1, y1] = to;
@@ -2995,8 +3024,8 @@ function install(define2) {
       const m = inset + 6;
       for (const [x, y] of [[-w / 2 + m, -d / 2 + m], [w / 2 - m, -d / 2 + m], [-w / 2 + m, d / 2 - m], [w / 2 - m, d / 2 - m]]) g.circle({ at: [x, y, 0], r: 1.6, line: "ln-soft" });
     }
-    if (o.label) g.text({ text: o.label, at: [-w / 2 + inset + 6, d / 2 - inset / 2 + 2, 0], plane: "top", size: o.labelSize || 6, cls: "tx tx-label", spacing: o.labelSpacing ?? 1.6 });
-    if (o.labelRight) g.text({ text: o.labelRight, at: [w / 2 - inset / 2 - 2, d / 2 - inset - 6, 0], plane: "top-y", size: o.labelSize || 6, cls: "tx tx-label", spacing: o.labelSpacing ?? 1.6 });
+    if (o.label) g.text({ text: o.label, at: [-w / 2 + inset + 6, d / 2 - inset / 2 + 2, 0], plane: "top", size: o.labelSize || 6, cls: "tx tx-label tx-floor", spacing: o.labelSpacing ?? 1.6 });
+    if (o.labelRight) g.text({ text: o.labelRight, at: [w / 2 - inset / 2 - 2, d / 2 - inset - 6, 0], plane: "top-y", size: o.labelSize || 6, cls: "tx tx-label tx-floor", spacing: o.labelSpacing ?? 1.6 });
   });
   define2("tree", (g, o) => {
     const kind = o.kind || "tiered", s = o.scale ?? 1, r = (o.r ?? 6) * s, h = (o.h ?? 20) * s;
@@ -3069,7 +3098,7 @@ function install(define2) {
   define2("zone", (g, o) => {
     const [w, d] = o.size || [120, 80], r = o.r ?? 8;
     g.rect({ at: [-w / 2, -d / 2, o.z || 0], size: [w, d], r, fill: o.fill === void 0 ? null : o.fill, line: o.line || "ln-soft", dash: o.dash ?? "4 4" });
-    if (o.label) g.text({ text: o.label, at: [-w / 2 + 6, d / 2 - 6, o.z || 0], plane: "top", size: o.labelSize || 6, cls: "tx tx-label", spacing: 1.4 });
+    if (o.label) g.text({ text: o.label, at: [-w / 2 + 6, d / 2 - 6, o.z || 0], plane: "top", size: o.labelSize || 6, cls: "tx tx-label tx-floor", spacing: 1.4 });
   }, { sort: "none", flatish: true });
   define2("plaque", (g, o) => {
     const text = String(o.text || ""), size = o.size || 6, w = o.w ?? text.length * size * 0.62 + 10, d = o.d ?? size + 7;
@@ -3918,9 +3947,12 @@ function buildDiagram(o, make2) {
     const line = new Line({ id: e.id, points: ptsR, arrow: e.arrow ?? "end", line: e.line || "ln", dash: e.dash, flow: e.flow === false ? void 0 : e.flow ?? o.flow ?? 14, arrowSize: 4.5 });
     g.add(line);
     const path2 = new Path(ptsR);
+    line.attached = [];
     if (e.label) {
       const mid = path2.at(0.5);
-      g.add(new Text({ text: e.label, at: mid, size: e.labelSize || 5.5, anchor: "middle", dy: -5, cls: "tx tx-label", layer: 1 }));
+      const label = new Text({ text: e.label, at: mid, size: e.labelSize || 5.5, anchor: "middle", dy: -5, cls: "tx tx-label", layer: 1 });
+      g.add(label);
+      line.attached.push(label);
     }
     edges.push({ spec: e, line, path: path2, from: A, to: B });
   }
@@ -3936,6 +3968,7 @@ function buildDiagram(o, make2) {
         const card = make2(ed.spec.packet || "card", { at: [p0[0], p0[1], p0[2]], w: 7, d: 5, t: 1.2, id: (ed.spec.id || ed.spec.from + "-" + ed.spec.to) + "-packet-" + i });
         g.add(card);
         cards.push(card);
+        ed.line.attached.push(card);
       }
       scene2.travel(cards, ed.path, { duration: ed.spec.duration ?? ed.path.length / (ed.spec.speed ?? o.speed ?? 40), spread: 1 / k, lift: 0.4, offset: ed.spec.offset || 0 });
     }
@@ -4124,7 +4157,12 @@ Object.assign(Scene.prototype, {
   drawOn(target, o = {}) {
     const nodes = this.resolve(target);
     const tl = this.timeline({ delay: o.delay ?? 0 });
-    tl.fromTo(nodes, { reveal: 0 }, { reveal: 1 }, { duration: o.duration ?? 1, ease: o.ease ?? "inOutCubic", stagger: o.stagger ?? 0.1 }, 0);
+    const dur = o.duration ?? 1, stagger = o.stagger ?? 0.1;
+    tl.fromTo(nodes, { reveal: 0 }, { reveal: 1 }, { duration: dur, ease: o.ease ?? "inOutCubic", stagger }, 0);
+    const each = typeof stagger === "number" ? stagger : stagger.each ?? 0;
+    nodes.forEach((n, i) => {
+      if (n.attached && n.attached.length) tl.fromTo(n.attached, { opacity: 0 }, { opacity: 1 }, { duration: 0.3 }, i * each + dur * 0.8);
+    });
     return tl;
   },
   /* reveal a Text node character by character */

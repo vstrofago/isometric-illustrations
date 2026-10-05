@@ -27,9 +27,9 @@ const X1 = 150, Y1 = 81, XT = -152;          // the L: down x = X1, along y = Y1
 /* ground */
 s.platform({ at: [-52, -41, 0], size: [500, 322], label: 'Packing line · Fig. 3 · 2026', screws: true });
 s.rect({ at: [-244, -124, 0], size: [300, 38], r: 4, line: 'ln-soft', dash: '4 4' });            // forklift lane
-s.text({ text: 'Forklift lane', at: [-238, -92, 0], plane: 'top', size: 5, cls: 'tx tx-label', spacing: 1 });
-s.text({ text: 'Line A', at: [30, 102, 0], plane: 'top', size: 7, cls: 'tx tx-label', spacing: 2 });
-s.text({ text: 'Dock 03', at: [-258, 110, 0], plane: 'top', size: 6, cls: 'tx tx-label', spacing: 1.6 });
+s.text({ text: 'Forklift lane', at: [-238, -92, 0], plane: 'top', size: 5, cls: 'tx tx-label tx-floor', spacing: 1 });
+s.text({ text: 'Line A', at: [30, 102, 0], plane: 'top', size: 7, cls: 'tx tx-label tx-floor', spacing: 2 });
+s.text({ text: 'Dock 03', at: [-258, 110, 0], plane: 'top', size: 6, cls: 'tx tx-label tx-floor', spacing: 1.6 });
 s.rect({ at: [X1 - 20, Y1 - 20, 0], size: [40, 40], r: 3, line: 'ln-faint', dash: '2 3' });     // keep-clear box at the corner
 
 /* the box former: open boxes come out of its front */
