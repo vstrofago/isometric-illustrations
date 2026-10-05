@@ -6,18 +6,6 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-### Added
-- `render.mjs --bare` hides the figure captions and floor labels (`tx-floor`); `--hide <css>` hides
-  anything else. Useful for clean clips in a video or a post.
-
-### Fixed
-- `drawOn` draws a line by cutting it to the revealed length. Dashed reveals broke with non-scaling strokes
-  and with flowing dashes, so diagram edges showed before they were drawn.
-- Diagram packets and edge labels fade in when their edge finishes drawing, not before.
-
-### Changed
-- The architecture example is now five services with straight edges.
-
 ## [0.1.0] - 2026-10-05
 
 First public release.
@@ -44,6 +32,8 @@ First public release.
 
 ### Examples and tools
 - Desk computer, packing line, service architecture, server room, hello; gallery and playground.
+- `render.mjs`: deterministic PNG, contact sheet, GIF, MP4, WebM and SVG exports, scripted interactions,
+  `--bare` for clips without captions.
 - Unit and visual tests, CI, release workflow.
 
 [Unreleased]: https://github.com/vstrofago/isometric-illustrations/compare/v0.1.0...HEAD
