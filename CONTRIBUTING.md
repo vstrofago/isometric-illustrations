@@ -56,8 +56,9 @@ frontmatter valid (`npm run validate:skill`): kebab-case `name` matching the fol
 
 Maintainers bump the version in `package.json`, `.claude-plugin/plugin.json`,
 `.claude-plugin/marketplace.json` and the skill's `metadata.version`, move **Unreleased** to a dated
-section in `CHANGELOG.md`, and push a `vX.Y.Z` tag. The release workflow builds, validates and attaches
-the skill zip and the engine bundles.
+section in `CHANGELOG.md`, and push a `vX.Y.Z` tag (or run the Release workflow by hand with the version,
+which creates the tag). The release workflow builds, validates and attaches the skill zip and the engine
+bundles. Every push to `main` republishes the gallery to GitHub Pages.
 
 ## Licence
 
