@@ -5,7 +5,7 @@ Un motor SVG con ordenación de profundidad, animación y exportación, y una sk
 a Claude (o a cualquier agente que lea `SKILL.md`) a planificar, construir, revisar y entregar estas
 figuras.
 
-[English](README.md) · Licencia [Apache 2.0](LICENSE)
+**[Galería y playground](https://vstrofago.github.io/isometric-illustrations/)** · [English](README.md) · Licencia [Apache 2.0](LICENSE)
 
 ![Línea de empaquetado: cajas sobre una cinta en L, desde la formadora hasta el camión](docs/img/packing-line.gif)
 

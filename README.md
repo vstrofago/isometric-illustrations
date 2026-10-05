@@ -8,7 +8,7 @@ agent that reads `SKILL.md`) to plan, build, check and ship these figures.
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 ![Zero runtime dependencies](https://img.shields.io/badge/runtime%20dependencies-0-lightgrey.svg)
 
-[Español](README.es.md)
+**[Gallery and playground](https://vstrofago.github.io/isometric-illustrations/)** · [Español](README.es.md)
 
 ![Packing line: boxes ride an L-shaped conveyor from a box former through a taping tunnel and a scanner into a truck](docs/img/packing-line.gif)
 
