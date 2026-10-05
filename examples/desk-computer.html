@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Desk computer</title>
+<style>
+  html,body{margin:0;background:#0b0c0d}
+  main{max-width:900px;margin:0 auto;padding:24px 16px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script src="../dist/iso.js"></script>
+<script>
+/* Fig. 2 — Desk computer. Click the machine (or Tab + Enter) to switch it on; type on your keyboard. */
+const s = Iso.scene('#app', {
+  figure: { index: 'Fig 2', title: 'Desk computer', hint: 'Type on it · click it to switch', status: 'off' },
+  label: 'Isometric line drawing of a compact desk computer with a keyboard',
+  padding: 28,
+});
+const pc = s.deskComputer({ id: 'pc', onStatus: (text) => s.status(text) });
+
+/* the body is the switch */
+pc.body.set({ interactive: true, label: 'Desk computer. Press Enter to switch on or off.' });
+pc.body.on('click', (e) => { pc.power(); if (e && e.detail > 0 && e.currentTarget !== window) document.activeElement && document.activeElement.blur && document.activeElement.blur(); });
+
+/* physical keyboard → keycaps + screen */
+const keyName = (e) => (e.key === ' ' ? 'space' : e.key.length === 1 ? e.key.toLowerCase() : e.key.toLowerCase());
+addEventListener('keydown', (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.repeat || e.defaultPrevented) return;
+  if (/input|textarea|select/i.test(e.target.tagName)) return;
+  if (e.key === ' ' && pc.state.on) e.preventDefault();
+  pc.press(keyName(e), true);
+  pc.type(e.key);
+});
+addEventListener('keyup', (e) => pc.press(keyName(e), false));
+
+/* clicking a keycap types it */
+pc.keyboard.findAll((n) => n.opts.key).forEach((k) => {
+  const id = k.opts.key;
+  k.on('down', () => {
+    pc.press(id, true);
+    setTimeout(() => pc.press(id, false), 110);
+    const key = id === 'space' ? ' ' : id === 'backspace' ? 'Backspace' : id === 'enter' ? 'Enter' : id.length === 1 ? id : null;
+    if (key) pc.type(key);
+  });
+});
+</script>
+</body>
+</html>

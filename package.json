@@ -1,0 +1,69 @@
+{
+  "name": "isometric-illustrations",
+  "version": "0.1.0",
+  "description": "Iso: an SVG engine for isometric illustrations, dioramas and diagrams, with depth sorting, animation and export, plus a portable agent skill.",
+  "keywords": [
+    "isometric",
+    "illustration",
+    "svg",
+    "diagram",
+    "animation",
+    "diorama",
+    "line-art",
+    "agent-skill",
+    "claude-code",
+    "skill"
+  ],
+  "homepage": "https://github.com/vstrofago/isometric-illustrations#readme",
+  "bugs": {
+    "url": "https://github.com/vstrofago/isometric-illustrations/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vstrofago/isometric-illustrations.git"
+  },
+  "license": "Apache-2.0",
+  "author": "vstrofago",
+  "type": "module",
+  "main": "dist/iso.esm.js",
+  "module": "dist/iso.esm.js",
+  "browser": "dist/iso.js",
+  "unpkg": "dist/iso.min.js",
+  "jsdelivr": "dist/iso.min.js",
+  "exports": {
+    ".": {
+      "import": "./dist/iso.esm.js",
+      "default": "./dist/iso.esm.js"
+    },
+    "./global": "./dist/iso.js",
+    "./min": "./dist/iso.min.js",
+    "./src/*": "./engine/src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/iso.js",
+    "dist/iso.min.js",
+    "dist/iso.esm.js",
+    "engine/src",
+    "LICENSE",
+    "NOTICE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node tools/bundle.mjs",
+    "dev": "node tools/bundle.mjs --watch",
+    "test": "node --test tests/*.test.mjs",
+    "test:unit": "node --test tests/engine.test.mjs",
+    "validate:skill": "node tools/validate-skill.mjs",
+    "render": "node skills/isometric-illustrations/scripts/render.mjs",
+    "skill:zip": "tools/install-skill.sh --zip",
+    "serve": "npx http-server -c-1 -p 8080 ."
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "playwright": "1.56.1"
+  }
+}

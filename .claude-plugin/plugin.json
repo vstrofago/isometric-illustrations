@@ -1,0 +1,10 @@
+{
+  "name": "isometric-illustrations",
+  "version": "0.1.0",
+  "description": "Isometric illustrations, dioramas and diagrams in hairline SVG: the Iso engine plus a skill that teaches Claude to plan, build, render and export them.",
+  "author": { "name": "vstrofago", "url": "https://github.com/vstrofago" },
+  "homepage": "https://github.com/vstrofago/isometric-illustrations",
+  "repository": "https://github.com/vstrofago/isometric-illustrations",
+  "license": "Apache-2.0",
+  "keywords": ["isometric", "illustration", "svg", "diagram", "animation", "skill"]
+}

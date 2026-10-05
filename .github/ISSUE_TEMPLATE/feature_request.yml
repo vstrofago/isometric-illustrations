@@ -1,0 +1,23 @@
+name: Feature request
+description: A new primitive, behaviour, export format or skill improvement.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What you are trying to draw or do
+      description: The figure or workflow, not the API you have in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: How you would like it to work. Sketches and references are welcome.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Engine, Prefabs, Animation, Export, Skill, Playground, Docs]
+    validations:
+      required: true

@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Primitives</title>
+<style>body{margin:0;background:#0c0d0e;padding:24px}</style></head><body>
+<div id="app"></div>
+<script src="../../dist/iso.js"></script>
+<script>
+const s = Iso.scene('#app', { figure: { index: 'Fig. 01', title: 'Primitives', hint: 'Engine test', status: 'static' } });
+s.box({ at: [0, 0, 0], size: [320, 240, 10], r: 12, chamfer: 3 });
+s.box({ at: [30, 30, 10], size: [60, 50, 40], r: 6, chamfer: 2 });
+s.box({ at: [110, 30, 10], size: [40, 40, 70], left: f => { f.rect(6, 6, f.w - 12, 30, { r: 3, fill: 'f-screen', line: 'ln' }); f.hlines(8, 46, 20, 12, 5); }, right: f => f.vlines(6, 8, 20, 30, 7) });
+s.cylinder({ at: [210, 60, 10], r: 26, h: 50, chamfer: 3, bands: [30], ribs: 16 });
+s.cone({ at: [270, 50, 10], r: 18, h: 50 });
+s.sphere({ at: [60, 150, 34], r: 22, equator: true });
+s.cylinder({ at: [60, 150, 10], r: 4, h: 4 });
+s.tube({ at: [180, 170, 10], r: 50, ri: 34, h: 18, bands: [9], ribs: 48, segments: 12 });
+s.box({ at: [172, 162, 10], size: [16, 16, 30], material: 'lit', glow: true });
+s.wedge({ at: [260, 120, 10], size: [40, 40, 20], up: '-x' });
+s.pyramid({ at: [290, 200, 10], size: [30, 30], h: 30 });
+s.text({ text: 'Iso · primitives · 2026', at: [8, 236, 10], plane: 'left', size: 7, cls: 'tx tx-label' });
+s.connector({ from: [100, 210], to: [140, 120], z: 10, flow: 12 });
+</script></body></html>

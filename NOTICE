@@ -1,0 +1,14 @@
+Iso — isometric illustrations
+Copyright 2026 vstrofago
+
+This product includes software developed by vstrofago and contributors
+(https://github.com/vstrofago/isometric-illustrations), licensed under the
+Apache License, Version 2.0 (see LICENSE).
+
+The line icons in engine/src/prefabs/icons.js were drawn for this project.
+The visual language derives from the Stoico design system by vstrofago.
+
+The nine-by-nine pixel star mark (engine/src/prefabs/icons.js, MARK) and the
+names "Stoico" and "vstrofago" are identifiers of their owner. The Apache
+License does not grant permission to use them as trademarks (Section 6);
+replace the mark with your own when you ship a product.

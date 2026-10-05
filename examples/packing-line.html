@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Packing line</title>
+<style>
+  html,body{margin:0;background:#0b0c0d}
+  main{max-width:1180px;margin:0 auto;padding:24px 16px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script src="../dist/iso.js"></script>
+<script>
+/* Fig. 3 — Packing line. Boxes leave the former open, are taped in the tunnel, turn the corner, get a
+   label at the scanner and roll into the truck. A forklift works the racks. Hover a station; click to pause. */
+const s = Iso.scene('#app', {
+  figure: { index: 'Fig. 3', title: 'Packing line', hint: 'Hover a station · click to pause', status: 'line a' },
+  label: 'Isometric diorama of a packing line: a conveyor carries boxes from a box former through a taping tunnel and a scanner into a truck, beside racks, pallets and a forklift',
+  padding: 22,
+});
+const R = Iso.rng(12);
+const H = 16, W = 22;                       // belt height and width
+const X1 = 150, Y1 = 81, XT = -152;          // the L: down x = X1, along y = Y1, ends at the truck (x = XT)
+
+/* ground */
+s.platform({ at: [-52, -41, 0], size: [500, 322], label: 'Packing line · Fig. 3 · 2026', screws: true });
+s.rect({ at: [-244, -124, 0], size: [300, 38], r: 4, line: 'ln-soft', dash: '4 4' });            // forklift lane
+s.text({ text: 'Forklift lane', at: [-238, -92, 0], plane: 'top', size: 5, cls: 'tx tx-label', spacing: 1 });
+s.text({ text: 'Line A', at: [30, 102, 0], plane: 'top', size: 7, cls: 'tx tx-label', spacing: 2 });
+s.text({ text: 'Dock 03', at: [-258, 110, 0], plane: 'top', size: 6, cls: 'tx tx-label', spacing: 1.6 });
+s.rect({ at: [X1 - 20, Y1 - 20, 0], size: [40, 40], r: 3, line: 'ln-faint', dash: '2 3' });     // keep-clear box at the corner
+
+/* the box former: open boxes come out of its front */
+const former = s.box({
+  id: 'former', at: [X1 - 30, -184, 0], size: [60, 48, 44], r: 2.5, chamfer: 1.2,
+  left: (f) => { f.rect(17, 12, 26, 18, { r: 1.5, fill: 'f-dark', line: 'ln' }); f.hlines(19, 4, 22, 5, 3, 'ln-faint'); f.rect(4, 6, 8, 10, { r: 1, fill: 'f-screen', line: 'ln-soft' }); },
+  right: (f) => { f.rect(6, 6, 20, 12, { r: 1.2, fill: 'f-screen', line: 'ln-soft' }); f.vlines(30, 6, 10, 26, 5, 'ln-faint'); f.rect(6, 24, 2, 2, { r: 1, fill: 'f-lit', line: null }); },
+  top: (f) => f.rect(6, 6, f.w - 12, f.h - 12, { r: 1.5, line: 'ln-soft' }),
+});
+for (let i = 0; i < 4; i++) s.box({ at: [X1 - 18, -176 + 1, 44 + i * 1.6], size: [36, 30, 1.2], r: 0.4, material: 'paper' });   // flat blanks on top
+
+/* belts */
+s.conveyor({ id: 'belt-a', at: [X1, (-136 + Y1 - W / 2) / 2, 0], axis: 'y', length: Y1 - W / 2 + 136, w: W, h: H });
+s.group({ id: 'corner', at: [X1, Y1, 0] }, (g) => {
+  for (const [x, y] of [[-W / 2 + 1, -W / 2 + 1], [W / 2 - 3, -W / 2 + 1], [-W / 2 + 1, W / 2 - 3], [W / 2 - 3, W / 2 - 3]]) g.box({ at: [x, y, 0], size: [2, 2, H - 4] });
+  g.box({ at: [-W / 2, -W / 2, H - 4], size: [W, W, 4], r: 1, chamfer: 0.5, top: (f) => { f.circle(W / 2, W / 2, W * 0.36, { line: 'ln-soft' }); f.circle(W / 2, W / 2, 2, { line: 'ln-faint' }); } });
+});
+s.box({ class: 'rail', at: [X1 + W / 2 - 1.2, Y1 - W / 2, H], size: [1.2, W, 2.6], r: 0.4 });
+s.box({ class: 'rail', at: [X1 - W / 2, Y1 + W / 2 - 1.2, H], size: [W - 1.2, 1.2, 2.6], r: 0.4 });
+s.conveyor({ id: 'belt-b', at: [(XT + X1 - W / 2) / 2, Y1, 0], axis: 'x', length: X1 - W / 2 - XT, w: W, h: H });
+
+/* stations */
+const tunnel = s.tunnel({ id: 'tape', at: [X1, -60, 0], axis: 'y', length: 30, w: 30, h: 36 });
+const scanner = s.scanner({ id: 'scan', at: [-70, Y1, 0], axis: 'x', w: 30, h: 38, beamFrom: H, beamOpacity: 1 });
+const truck = s.truck({ id: 'truck', at: [XT - 45, Y1, 0], length: 90, w: 42, h: 44, floor: 13, text: 'Freight · 03' });
+
+/* storage inside the L */
+[-210, -130, -50].forEach((x, i) => s.rack({ id: 'rack-' + i, class: 'rack', at: [x, -165, 0], size: [70, 24], h: 54, seed: 3 + i, fill: 0.75 }));
+s.pallet({ id: 'pallet-1', at: [-205, 6, 0], load: [2, 2, 2] });
+s.pallet({ id: 'pallet-2', at: [-150, 6, 0], load: [2, 2, 2], partial: 0.5, seed: 9 });
+for (let i = 0; i < 3; i++) s.pallet({ at: [-95, 4, i * 3.9] });
+for (const [x, y] of [[X1 + 24, Y1 + 24], [X1 + 24, Y1 - 28], [XT + 12, Y1 + 24], [XT + 12, Y1 - 26]]) s.cylinder({ at: [x, y, 0], r: 2.2, h: 9, chamfer: 0.6, bands: [6] });
+
+/* the forklift shuttles along its lane, carrying a load */
+const forklift = s.forklift({ id: 'forklift', at: [-215, -105, 0], load: true });
+s.travel(forklift, Iso.path.line([-215, -105, 0], [25, -105, 0]), { duration: 9, yoyo: true, ease: Iso.ease.inOutSine });
+
+/* boxes ride the L: open → taped (tunnel) → labelled (scanner) → truck */
+const line = Iso.path.polyline([[X1, -128, H], [X1, Y1, H], [XT + 4, Y1, H]], { radius: 11 });
+const N = 11, LAP = line.length / 21;
+const parcels = Array.from({ length: N }, (_, i) => s.parcel({
+  id: 'box-' + i, class: 'box', at: [X1, -128, H], open: true,
+  size: [R.range(13, 17), R.range(11, 15), R.range(9, 13)],
+}));
+s.travel(parcels, line, { duration: LAP, orient: true });
+const uAt = (pred) => { for (let u = 0; u <= 1; u += 0.0005) if (pred(line.at(u))) return u; return 1; };
+const uTape = uAt((p) => p[1] >= -60), uScan = uAt((p) => p[0] <= -70);
+const beam = s.get('scan-beam'), led = s.get('tape-led');
+
+/* station roles shown on hover */
+let hover = null, last = '';
+const roles = new Map([
+  [former, 'former · folds a box every 2 s'], [truck, 'truck · loading at dock 03'], [forklift, 'forklift · restocking racks'],
+  ...tunnel.items().map((n) => [n, 'tunnel · tape on, flaps down']), ...scanner.items().map((n) => [n, 'scanner · label printed, beam on']),
+  ...s.all((n) => n.prefab === 'rack').map((n) => [n, 'rack · 3 levels, 70 × 24']),
+]);
+for (const [n, text] of roles) { n.on('hover', () => { hover = text; }); n.on('leave', () => { hover = null; }); }
+
+s.loop((t) => {
+  let b = 0, sealing = false;
+  parcels.forEach((p, i) => {
+    const u = (((t / LAP + i / N) % 1) + 1) % 1, at = u * line.length;
+    p.open(u < uTape);
+    p.label(u > uScan);
+    s.nudge(p, 'opacity', Math.max(0, Math.min(1, at / 10, (line.length - at) / 12)));
+    const ds = Math.abs(u - uScan) * line.length;
+    if (ds < 12) b = Math.max(b, 1 - ds / 12);
+    if (Math.abs(u - uTape) * line.length < 16) sealing = true;
+  });
+  s.nudge(beam, 'opacity', 0.22 + 0.78 * b);
+  led.set('fill', sealing ? 'f-lit' : 'f-soft');
+  const text = hover || 'line a · ' + (1280 + Math.floor((t * N) / LAP)) + ' shipped';
+  if (text !== last) { s.status(text); last = text; }
+});
+
+/* entrance: the hall assembles back to front, then the boxes and the forklift appear */
+s.assemble(s.root.items().filter((n) => n.prefab !== 'platform' && n.prefab !== 'parcel' && n.prefab !== 'forklift' && n.kind !== 'text' && n.kind !== 'flat'), { stagger: 0.008, drop: 26, duration: 0.7 });
+s.timeline({ delay: 1.6 }).from([...parcels, forklift], { opacity: 0 }, { duration: 0.6, stagger: 0.05 });
+
+s.on('render', () => s.svg.addEventListener('click', () => { s.toggle(); s.status(s.playing ? 'line a' : 'paused'); }));
+</script>
+</body>
+</html>
